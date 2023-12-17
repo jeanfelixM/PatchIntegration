@@ -52,6 +52,7 @@ float patch_integration(Vec2f point,float depthinit, const cv::Mat& imsource,con
 }
 
 void source2target(float depth, const cv::Mat& K, const cv::Mat& P, const cv::Mat& patchsource, cv::Mat& patchtarget) {
+    // a faire : vectoriser pour eviter les boucles
     for (int i = 0; i < patchsource.rows; ++i) {
             //pixel en coordonnées 3D
             cv::Mat point3D = depth * (K.inv() * cv::Mat(cv::Vec3f(patchsource.at<float>(i,0),patchsource.at<float>(i,1), 1.0f)));
