@@ -52,29 +52,25 @@ float patch_integration(Vec2f point,float depthinit, const cv::Mat& imsource,con
 }
 
 void source2target(float depth, const cv::Mat& K, const cv::Mat& P, const cv::Mat& patchsource, cv::Mat& patchtarget) {
-    //K et P ont les tailles attendues
-    CV_Assert(K.size() == cv::Size(3, 3) && P.size() == cv::Size(4, 4));
-
-    for (int y = 0; y < patchsource.rows; ++y) {
-        for (int x = 0; x < patchsource.cols; ++x) {
+    for (int i = 0; i < patchsource.rows; ++i) {
             //pixel en coordonnées 3D
-            cv::Mat point3D = depth * (K.inv() * cv::Mat(cv::Vec3f(x, y, 1.0f)));
+            cv::Mat point3D = depth * (K.inv() * cv::Mat(cv::Vec3f(patchsource.at<float>(i,0),patchsource.at<float>(i,1), 1.0f)));
 
             cv::Mat pointInTarget = P * cv::Mat(cv::Vec4f(point3D.at<float>(0), point3D.at<float>(1), point3D.at<float>(2), 1.0f));
 
             //reprojection
             cv::Mat pointInImage = K * (pointInTarget.rowRange(0, 3));
 
-            //normalisation pour obtenir les coordonnées pixel
+            //normalisation et partie entiere pour coo pixels
             pointInImage /= pointInImage.at<float>(2);
             int targetX = static_cast<int>(pointInImage.at<float>(0));
             int targetY = static_cast<int>(pointInImage.at<float>(1));
 
             //le point projeté est à l'intérieur des limites de l'image
             if (targetX >= 0 && targetX < patchtarget.cols && targetY >= 0 && targetY < patchtarget.rows) {
-                patchtarget.at<cv::Vec3b>(targetY, targetX) = patchsource.at<cv::Vec3b>(y, x);
+                patchtarget.at<cv::Vec2f>(i) = Vec2f(targetX, targetY);
             }
-        }
+        
     }
 }
 
@@ -103,10 +99,10 @@ void create_patch(const cv::Mat& im, const Vec2f point, cv::Mat& patch, int size
     }
     
     /*Creation finale du patch qui sera donc les POSITIONS dans le repère IMAGE des pixels concerné*/
-    patch = Mat::zeros(size, size, CV_32FC2);
+    patch = Mat::zeros(size*size,2, CV_32FC2);
     for (int i = x1; i < x2; i++){
         for (int j = y1; j < y2; j++){
-            patch.at<Vec2f>(i-x1,j-y1) = Vec2f(j,i);
+            patch.at<Vec2f>((i-x1)*(j-y1)+(j-y1)) = Vec2f(j,i);
         }
     }
 
