@@ -5,12 +5,14 @@
 using namespace std;
 using namespace cv;
 
-
+//Une amélioration pourrait être d'utiliser autre chose que zncc pour déterminer la similarité entre deux patchs
 float evaluation_patch(const cv::Mat& patchsource, const cv::Mat& patchtarget, const cv::Mat& imsource, const cv::Mat& imtarget) {
     //si les patchs ont la même taille
     if (patchsource.size() != patchtarget.size()) {
         throw std::invalid_argument("Les patchs doivent être de la même taille");
     }
+
+    // A MODIFIER : patchsource et patchtarget sont des matrices de coordonnées, pas de valeur des pixels -> pas bon pour l'instant
 
     cv::Scalar meanSource, stddevSource;
     cv::meanStdDev(patchsource, meanSource, stddevSource);
