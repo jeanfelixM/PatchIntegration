@@ -15,3 +15,10 @@ void normalsEstimation(cv::Mat& rgbimage, cv::Mat& normalmap);
 * @param[out] depthmap Carte de profondeur
 */
 void normalsIntegration(cv::Mat& normalmap, cv::Mat& depthmap);
+
+/**
+ * Charge une image de normales à partir d'un fichier
+ * @param[out] normalmap Carte des normales
+ * @param[in] filename Nom du fichier 
+ */
+void loadNormals(cv::Mat& normalmap, std::string filename);

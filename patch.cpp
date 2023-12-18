@@ -45,7 +45,8 @@ float patch_integration(Vec2f point,float depthinit, const cv::Mat& imsource,con
     normalsIntegration(patchsource, integratedpatch);
     //float depthcentre = .... (prendre la depth du point central du patch)
     integratedpatch.col(2) = integratedpatch.col(2)/depthcentre
-
+    
+    //recherche ameliorable
     for (int i = 1; i < N; i++){
         depth += i*depthstep;
         source2target(depth, K, P, integratedpatch, patchtarget);
@@ -70,9 +71,9 @@ void source2target(float depth, const cv::Mat& K, const cv::Mat& P, const cv::Ma
 
             //reprojection dans I2
             cv::Mat w2 = (pointR2.at<float>(2)).rowRange(0,2)
-            cv::Mat p2 = K * (w2);
+            cv::Mat p2 = K * w2;
 
-            //coordonnées pixel entieres            
+            //coordonnées pixel entieres(peut etre pas necessaire/pas bien)         
             int targetX = static_cast<int>(p2.at<float>(0));
             int targetY = static_cast<int>(p2.at<float>(1));
 
