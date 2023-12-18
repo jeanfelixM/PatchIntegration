@@ -26,5 +26,5 @@ int main(int argc, char** argv)
 
 void load_ground_truth(cv::Mat& imsource, cv::Mat& imtarget, cv::Mat& K, cv::Mat& P,cv::Mat& normalmap, std::string DIRS){
 	for 
-	loadNormals(normalmap, filename);
+	load_normals(normalmap, filename);
 }

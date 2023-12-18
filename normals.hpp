@@ -21,4 +21,4 @@ void normalsIntegration(cv::Mat& normalmap, cv::Mat& depthmap);
  * @param[out] normalmap Carte des normales
  * @param[in] filename Nom du fichier 
  */
-void loadNormals(cv::Mat& normalmap, std::string filename);
+void load_normals(cv::Mat& normalmap, std::string filename);
