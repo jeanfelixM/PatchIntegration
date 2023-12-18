@@ -41,9 +41,14 @@ float patch_integration(Vec2f point,float depthinit, const cv::Mat& imsource,con
     /*centre la recherche autour de depthinit*/
     depth -= (N/2)*depthstep;
     
+    Mat integratedpatch = Mat::zeros(patchsource.rows, 3);
+    normalsIntegration(patchsource, integratedpatch);
+    //float depthcentre = .... (prendre la depth du point central du patch)
+    integratedpatch.col(2) = integratedpatch.col(2)/depthcentre
+
     for (int i = 1; i < N; i++){
         depth += i*depthstep;
-        source2target(depth, K, P, patchsource, patchtarget);
+        source2target(depth, K, P, integratedpatch, patchtarget);
         float zncc = evaluation_patch(patchsource, patchtarget, imsource, imtarget);
         if (zncc > maxzncc){
             maxzncc = zncc;
@@ -52,22 +57,24 @@ float patch_integration(Vec2f point,float depthinit, const cv::Mat& imsource,con
     }
     return depth;
 }
-
-void source2target(float depth, const cv::Mat& K, const cv::Mat& P, const cv::Mat& patchsource, cv::Mat& patchtarget) {
+/*
+* P = (R | t)
+*/
+void source2target(float depth, const cv::Mat& K, const cv::Mat& P, const cv::Mat& integratedpatch, cv::Mat& patchtarget) {
     // a faire : vectoriser pour eviter les boucles
-    for (int i = 0; i < patchsource.rows; ++i) {
+    for (int i = 0; i < integratedpatch.rows; ++i) {
             //pixel en coordonnées 3D
-            cv::Mat point3D = depth * (K.inv() * cv::Mat(cv::Vec3f(patchsource.at<float>(i,0),patchsource.at<float>(i,1), 1.0f)));
+            
+            cv::Mat pointR1 = depth * (K.inv() * integratedpatch.row(i).t());
+            cv::Mat pointR2 = P * cv::Mat(cv::Vec4f(pointR1.at<float>(0), pointR1.at<float>(1), pointR1.at<float>(2), 1.0f));
 
-            cv::Mat pointInTarget = P * cv::Mat(cv::Vec4f(point3D.at<float>(0), point3D.at<float>(1), point3D.at<float>(2), 1.0f));
+            //reprojection dans I2
+            cv::Mat w2 = (pointR2.at<float>(2)).rowRange(0,2)
+            cv::Mat p2 = K * (w2);
 
-            //reprojection
-            cv::Mat pointInImage = K * (pointInTarget.rowRange(0, 3));
-
-            //normalisation et partie entiere pour coo pixels
-            pointInImage /= pointInImage.at<float>(2);
-            int targetX = static_cast<int>(pointInImage.at<float>(0));
-            int targetY = static_cast<int>(pointInImage.at<float>(1));
+            //coordonnées pixel entieres            
+            int targetX = static_cast<int>(p2.at<float>(0));
+            int targetY = static_cast<int>(p2.at<float>(1));
 
             //le point projeté est à l'intérieur des limites de l'image
             if (targetX >= 0 && targetX < patchtarget.cols && targetY >= 0 && targetY < patchtarget.rows) {
@@ -105,7 +112,7 @@ void create_patch(const cv::Mat& im, const Vec2f point, cv::Mat& patch, int size
     patch = Mat::zeros(size*size,2, CV_32FC2);
     for (int i = x1; i < x2; i++){
         for (int j = y1; j < y2; j++){
-            patch.at<Vec2f>((i-x1)*(j-y1)+(j-y1)) = Vec2f(j,i);
+            patch.at<Vec2f>((i-x1)*(j-y1)+(j-y1)) = Vec2f(i,j);
         }
     }
 

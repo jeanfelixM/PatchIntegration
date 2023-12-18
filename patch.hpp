@@ -16,7 +16,7 @@ void create_patch(const cv::Mat& im, const Vec2f point, cv::Mat& patch, int size
 * Projette dans le repère monde le patch de l'image de reference puis le reprojette dans l'image source
 * @param[in] depth Profondeur qu'on teste
 * @param[in] K Matrice intrinseque de la camera
-* @param[in] P changement de pose entre les deux images
+* @param[in] P changement de pose entre les deux images, P = (R | t) 4*3 
 * @param[in] patchsource Patch de l'image de départ
 * @param[out] patchtarget Patch de l'image d'arivee
 */
@@ -40,7 +40,7 @@ float evaluation_patch(const cv::Mat& patchsource, const cv::Mat& patchtarget, c
  * @param[in] imsource Image source
  * @param[in] imtarget Image d'arrivée
  * @param[in] K Matrice intrinseque de la camera
- * @param[in] P changement de pose entre les deux images
+ * @param[in] P changement de pose entre les deux images, P = (R | t) 4*3 
  * @return Profondeur du point
 */
 float patch_integration(Vec2f point,float depthinit,const cv::Mat& imsource,const cv::Mat& imtarget, const::cv::Mat& K, const cv::Mat& P);
