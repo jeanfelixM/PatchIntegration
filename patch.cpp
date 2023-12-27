@@ -1,6 +1,7 @@
 #include "patch.hpp"
 #include <iostream>
 #include <opencv2/core/core.hpp>
+#include "normals.hpp"
 
 using namespace std;
 using namespace cv;
@@ -29,7 +30,7 @@ float evaluation_patch(const cv::Mat& patchsource, const cv::Mat& patchtarget, c
     return zncc;
 }
 
-float patch_integration(Vec2f point,float depthinit, const cv::Mat& imsource,const cv::Mat& imtarget, const::cv::Mat& K, const cv::Mat& P){
+float patch_integration(Point2f point,float depthinit, const cv::Mat& imsource,const cv::Mat& imtarget, const::cv::Mat& K, const cv::Mat& P){
     Mat patchsource, patchtarget;
     create_patch(imsource, point, patchsource, 5);
 
@@ -70,7 +71,7 @@ void source2target(float depth, const cv::Mat& K, const cv::Mat& P, const cv::Ma
             cv::Mat pointR2 = P * cv::Mat(cv::Vec4f(pointR1.at<float>(0), pointR1.at<float>(1), pointR1.at<float>(2), 1.0f));
 
             //reprojection dans I2
-            cv::Mat w2 = (pointR2.at<float>(2)).rowRange(0,2)
+            cv::Mat w2 = pointR2.rowRange(0,2);
             cv::Mat p2 = K * w2;
 
             //coordonnées pixel entieres(peut etre pas necessaire/pas bien)         
