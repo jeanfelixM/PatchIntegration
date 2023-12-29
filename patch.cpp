@@ -12,8 +12,11 @@ float evaluation_patch(const cv::Mat& patchsource, const cv::Mat& patchtarget, c
     if (patchsource.size() != patchtarget.size()) {
         throw std::invalid_argument("Les patchs doivent être de la même taille");
     }
-
-    // A MODIFIER : patchsource et patchtarget sont des matrices de coordonnées, pas de valeur des pixels -> pas bon pour l'instant
+    Mat srcval,targetval;
+    for (int i = 0; i < patchsource.rows; ++i) {
+        srcval.push_back(imsource.at<float>(patchsource.at<Vec2i>(i).val[0], patchsource.at<Vec2i>(i).val[1]));
+        targetval.push_back(imtarget.at<float>(patchtarget.at<Vec2i>(i).val[0], patchtarget.at<Vec2i>(i).val[1]));
+    }
 
     cv::Scalar meanSource, stddevSource;
     cv::meanStdDev(patchsource, meanSource, stddevSource);
@@ -30,25 +33,26 @@ float evaluation_patch(const cv::Mat& patchsource, const cv::Mat& patchtarget, c
     return zncc;
 }
 
-float patch_integration(Point2f point,float depthinit, const cv::Mat& imsource,const cv::Mat& imtarget, const::cv::Mat& K, const cv::Mat& P){
-    Mat patchsource, patchtarget;
-    create_patch(imsource, point, patchsource, 5);
+float patch_integration(Point2f point, const cv::Mat& imsource, const cv::Mat& normalsource,const cv::Mat& imtarget,float depthinit, const::cv::Mat& K, const cv::Mat& P){
+    Mat patchsource, patchtarget, patchnormalsource;
+    int size = 5;
+    create_patch(imsource, point, patchsource, size);
+    create_patch(normalsource, point, patchnormalsource, size);
 
-    int N = 10;
+    cv::Mat integratedpatch = Mat::zeros(patchsource.rows, 3, CV_32F);
+    normalsIntegration(patchnormalsource, integratedpatch);
+    float depthcentre = integratedpatch.row(size*size/2 - size/2).at<float>(2);
+    integratedpatch.col(2) = integratedpatch.col(2)/depthcentre;
+
+    int N = 10; //nombre de profondeurs testées
     float depthmax = 0;
     float depth = depthinit;
     float depthstep = 0.1;
     float maxzncc = 0;
-    /*centre la recherche autour de depthinit*/
-    depth -= (N/2)*depthstep;
-    
-    Mat integratedpatch = Mat::zeros(patchsource.rows, 3);
-    normalsIntegration(patchsource, integratedpatch);
-    //float depthcentre = .... (prendre la depth du point central du patch)
-    integratedpatch.col(2) = integratedpatch.col(2)/depthcentre
+    depth -= (N/2)*depthstep; //centre la recherche autour de depthinit
     
     //recherche ameliorable
-    for (int i = 1; i < N; i++){
+    for(int i = 1; i < N; i++){
         depth += i*depthstep;
         source2target(depth, K, P, integratedpatch, patchtarget);
         float zncc = evaluation_patch(patchsource, patchtarget, imsource, imtarget);
@@ -111,10 +115,10 @@ void create_patch(const cv::Mat& im, const Vec2f point, cv::Mat& patch, int size
     }
     
     /*Creation finale du patch qui sera donc les POSITIONS dans le repère IMAGE des pixels concerné*/
-    patch = Mat::zeros(size*size,2, CV_32FC2);
+    patch = Mat::zeros(size*size,2, CV_32SC1);
     for (int i = x1; i < x2; i++){
         for (int j = y1; j < y2; j++){
-            patch.at<Vec2f>((i-x1)*(j-y1)+(j-y1)) = Vec2f(i,j);
+            patch.at<Vec2i>((i-x1)*(j-y1)+(j-y1)) = Vec2i(i,j);
         }
     }
 

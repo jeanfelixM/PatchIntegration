@@ -1,6 +1,8 @@
 #pragma once
 #include <iostream>
 #include <opencv2/core/core.hpp>
+#include <opencv2/core/matx.hpp>
+#include <opencv2/core/types.hpp>
 
 
 /**
@@ -10,7 +12,7 @@
  * @param[out] patch Patch
  * @param[in] size Taille du patch
 */
-void create_patch(const cv::Mat& im, const Vec2f point, cv::Mat& patch, int size);
+void create_patch(const cv::Mat& im, const cv::Vec2f point, cv::Mat& patch, int size);
 
 /**
 * Projette dans le repère monde le patch de l'image de reference puis le reprojette dans l'image source
@@ -43,4 +45,4 @@ float evaluation_patch(const cv::Mat& patchsource, const cv::Mat& patchtarget, c
  * @param[in] P changement de pose entre les deux images, P = (R | t) 4*3 
  * @return Profondeur du point
 */
-float patch_integration(Vec2f point,float depthinit,const cv::Mat& imsource,const cv::Mat& imtarget, const::cv::Mat& K, const cv::Mat& P);
+float patch_integration(cv::Point2f point, const cv::Mat& imsource, const cv::Mat& normalsource,const cv::Mat& imtarget,float depthinit, const::cv::Mat& K, const cv::Mat& P);
