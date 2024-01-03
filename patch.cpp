@@ -33,21 +33,28 @@ float evaluation_patch(const cv::Mat& patchsource, const cv::Mat& patchtarget, c
     return zncc;
 }
 
-float patch_integration(Point2f point, const cv::Mat& imsource, const cv::Mat& normalsource,const cv::Mat& imtarget,float depthinit, const::cv::Mat& K, const cv::Mat& P){
+float patch_integration(Point2f point, const cv::Mat& imsource, const cv::Mat& normalsource,const cv::Mat& imtarget,float depthinit, const::cv::Mat& K, const cv::Mat& P,bool debug=false, const cv::Mat& depthmap=cv::Mat()){
     Mat patchsource, patchtarget, patchnormalsource;
     int size = 5;
     create_patch(imsource, point, patchsource, size);
-    create_patch(normalsource, point, patchnormalsource, size);
+    
 
     cv::Mat integratedpatch = Mat::zeros(patchsource.rows, 3, CV_32F);
-    normalsIntegration(patchnormalsource, integratedpatch);
+    if (debug){
+        create_patch(depthmap, point, integratedpatch, size);
+    }
+    else {
+        create_patch(normalsource, point, patchnormalsource, size);
+        //passer des coordonnées au valeurs
+        normalsIntegration(patchnormalsource, integratedpatch);
+    }
     float depthcentre = integratedpatch.row(size*size/2 - size/2).at<float>(2);
     integratedpatch.col(2) = integratedpatch.col(2)/depthcentre;
 
     int N = 10; //nombre de profondeurs testées
     float depthmax = 0;
     float depth = depthinit;
-    float depthstep = 0.1;
+    float depthstep = 0.1;//ou 0.01 a tester
     float maxzncc = 0;
     depth -= (N/2)*depthstep; //centre la recherche autour de depthinit
     

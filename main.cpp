@@ -13,12 +13,13 @@ int main(int argc, char** argv)
 {
 	
 	cv::Mat normalmap;
+	cv::Mat depthmapGT;
 	cv::Mat imsource;
 	cv::Mat imtarget;
 	cv::Mat K;
 	cv::Mat P;
 	//normalsEstimation(imsource, normalmap);
-	if(!parseArgs(argc, argv, imsource, imtarget, normalmap, K, P)) {
+	if(!parseArgs(argc, argv, imsource, imtarget, normalmap, K, P, depthmapGT)) {
 		cerr << "Aborting..." << endl;
         return EXIT_FAILURE;
 	}
@@ -27,7 +28,8 @@ int main(int argc, char** argv)
 	for (int i = 0; i < imsource.rows;i++){
 		for (int j = 0; j < imsource.cols;j++){
 			cv::Point2f point(i, j);
-			depth = patch_integration(point, imsource, normalmap, imtarget, 1, K, P);
+			//depthinit à initialiser intelligement
+			depth = patch_integration(point, imsource, normalmap, imtarget, 1, K, P,true,depthmapGT);
 			depthmap.at<float>(i,j) = depth;
 		}
 	}
@@ -43,14 +45,15 @@ void help(const char* programName)
          << "     -target <target image>                            # the path to the target image" << endl
          << "     -calib <calibration file>                         # the path to the XML file containing both K and P matrices" << endl
          << "     -normals <normal map image>                       # (optional) the path to the normal map image" << endl
+		 << "     -depthmap <depth map image>                       # (optional) the path to the depth map image" << endl
          << endl;
 }
 
 
 
-bool parseArgs(int argc, char** argv, cv::Mat& imsource, cv::Mat& imtarget, cv::Mat normalmap,cv::Mat& K, cv::Mat& P)
+bool parseArgs(int argc, char** argv, cv::Mat& imsource, cv::Mat& imtarget, cv::Mat normalmap, cv::Mat& depthmap, cv::Mat& K, cv::Mat& P)
 {
-    string sourceImagePath, targetImagePath, calibFilePath, normalMapPath;
+    string sourceImagePath, targetImagePath, calibFilePath, normalMapPath,depthMapPath;
     FileStorage fs;
 
     if(argc < 3)
@@ -77,6 +80,10 @@ bool parseArgs(int argc, char** argv, cv::Mat& imsource, cv::Mat& imtarget, cv::
 		else if(strcmp(s, "-normals") == 0)
         {
             normalMapPath.assign(argv[++i]);
+        }
+		else if(strcmp(s, "-depthmap") == 0)
+        {
+            depthMapPath.assign(argv[++i]);
         }
         else
         {
@@ -112,6 +119,13 @@ bool parseArgs(int argc, char** argv, cv::Mat& imsource, cv::Mat& imtarget, cv::
 		imtarget = imread(targetImagePath, IMREAD_COLOR);
 		if (imtarget.empty()) {
 			cerr << "Could not open or find the target image" << endl;
+			return false;
+		}
+	}
+	if (!depthMapPath.empty()) {
+		depthmap = imread(depthMapPath, IMREAD_COLOR);
+		if (depthmap.empty()) {
+			cerr << "Could not open or find the depth map image" << endl;
 			return false;
 		}
 	}
