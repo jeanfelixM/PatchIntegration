@@ -28,7 +28,7 @@ int main(int argc, char** argv)
 	for (int i = 0; i < imsource.rows;i++){
 		for (int j = 0; j < imsource.cols;j++){
 			cv::Point2f point(i, j);
-			//depthinit à initialiser intelligement
+			//depthinit à initialiser intelligement (KDtree avec les points du SfM)
 			depth = patch_integration(point, imsource, normalmap, imtarget, 1, K, P,true,depthmapGT);
 			depthmap.at<float>(i,j) = depth;
 		}

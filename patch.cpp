@@ -33,6 +33,7 @@ float evaluation_patch(const cv::Mat& patchsource, const cv::Mat& patchtarget, c
     return zncc;
 }
 
+//a refacto (param et init)
 float patch_integration(Point2f point, const cv::Mat& imsource, const cv::Mat& normalsource,const cv::Mat& imtarget,float depthinit, const::cv::Mat& K, const cv::Mat& P,bool debug=false, const cv::Mat& depthmap=cv::Mat()){
     Mat patchsource, patchtarget, patchnormalsource;
     int size = 5;
@@ -44,12 +45,21 @@ float patch_integration(Point2f point, const cv::Mat& imsource, const cv::Mat& n
         create_patch(depthmap, point, integratedpatch, size);
     }
     else {
-        create_patch(normalsource, point, patchnormalsource, size);
-        //passer des coordonnées au valeurs
+        create_patch(normalsource, point, prepatchnormalsource, size);
+        //passer des coordonnées aux valeurs
+        cv::Mat patchnormalsource = Mat::zeros(size, size, CV_32F);
+        for (int i = 0; i < prepatchnormalsource.rows; ++i) {
+            int x = prepatchnormalsource.at<Vec2i>(i).val[0];
+            int y = prepatchnormalsource.at<Vec2i>(i).val[1];
+            patchnormalsource.at<float>(x,y) = normalsource.at<float>(x, y);
+        }
         normalsIntegration(patchnormalsource, integratedpatch);
+        //vectoriser integratedPatch : a faire
     }
     float depthcentre = integratedpatch.row(size*size/2 - size/2).at<float>(2);
     integratedpatch.col(2) = integratedpatch.col(2)/depthcentre;
+
+    //a faire : prunage des points qui ne sont pas dans l'image target (comparer normal du point et direction camera) (ou a integrer dans source2target)
 
     int N = 10; //nombre de profondeurs testées
     float depthmax = 0;
@@ -62,6 +72,8 @@ float patch_integration(Point2f point, const cv::Mat& imsource, const cv::Mat& n
     for(int i = 1; i < N; i++){
         depth += i*depthstep;
         source2target(depth, K, P, integratedpatch, patchtarget);
+        // a rajouter : interpolate patchtarget
+
         float zncc = evaluation_patch(patchsource, patchtarget, imsource, imtarget);
         if (zncc > maxzncc){
             maxzncc = zncc;
