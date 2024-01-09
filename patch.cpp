@@ -35,53 +35,41 @@ float evaluation_patch(const cv::Mat& patchsource, const cv::Mat& patchtarget, c
 
 //a refacto (param et init)
 float patch_integration(Point2f point, const cv::Mat& imsource, const cv::Mat& normalsource,const cv::Mat& imtarget,float depthinit, const::cv::Mat& K, const cv::Mat& P,bool debug=false, const cv::Mat& depthmap=cv::Mat()){
-    Mat patchsource, patchtarget, patchnormalsource;
+    Mat patchsource, patchtarget, patchnormalsource,prepatchnormalsource,integratedpatch;
+    cv::Mat preintegratedpatch = Mat::zeros(patchsource.rows, 3, CV_32F);
     int size = 5;
-    create_patch(imsource, point, patchsource, size);
+    
     
 
-    cv::Mat integratedpatch = Mat::zeros(patchsource.rows, 3, CV_32F);
+    create_patch(imsource, point, patchsource, size);
     if (debug){
         create_patch(depthmap, point, integratedpatch, size);
     }
-    else {
+    else{
         create_patch(normalsource, point, prepatchnormalsource, size);
-        //passer des coordonnées aux valeurs
+        //passer des coordonnées aux valeurs et un-vectoriser
         cv::Mat patchnormalsource = Mat::zeros(size, size, CV_32F);
         for (int i = 0; i < prepatchnormalsource.rows; ++i) {
             int x = prepatchnormalsource.at<Vec2i>(i).val[0];
             int y = prepatchnormalsource.at<Vec2i>(i).val[1];
             patchnormalsource.at<float>(x,y) = normalsource.at<float>(x, y);
         }
-        normalsIntegration(patchnormalsource, integratedpatch);
-        //vectoriser integratedPatch : a faire
+        normalsIntegration(patchnormalsource, preintegratedpatch);
+        vectorize_patch(preintegratedpatch, integratedpatch);
     }
     float depthcentre = integratedpatch.row(size*size/2 - size/2).at<float>(2);
     integratedpatch.col(2) = integratedpatch.col(2)/depthcentre;
 
     //a faire : prunage des points qui ne sont pas dans l'image target (comparer normal du point et direction camera) (ou a integrer dans source2target)
 
-    int N = 10; //nombre de profondeurs testées
-    float depthmax = 0;
-    float depth = depthinit;
-    float depthstep = 0.1;//ou 0.01 a tester
-    float maxzncc = 0;
-    depth -= (N/2)*depthstep; //centre la recherche autour de depthinit
-    
-    //recherche ameliorable
-    for(int i = 1; i < N; i++){
-        depth += i*depthstep;
-        source2target(depth, K, P, integratedpatch, patchtarget);
-        // a rajouter : interpolate patchtarget
+    int nb_profondeur = 10; // Nombre de profondeurs testées
+    float depthstep = 0.1; // Ou 0.01 à tester
+    float optimalDepth = findOptimalDepth(depthinit, K, P, integratedpatch, imsource, imtarget, patchsource, depthstep, nb_profondeur);
 
-        float zncc = evaluation_patch(patchsource, patchtarget, imsource, imtarget);
-        if (zncc > maxzncc){
-            maxzncc = zncc;
-            depthmax = depth;
-        }
-    }
-    return depth;
+
+    return optimalDepth;
 }
+
 /*
 * P = (R | t)
 */
@@ -142,3 +130,34 @@ void create_patch(const cv::Mat& im, const Vec2f point, cv::Mat& patch, int size
     }
 }
 
+void vectorize_patch(const cv::Mat& integratedPatch, cv::Mat& vectorizedPatch) {
+    int size = integratedPatch.rows; // Assumons que integratedPatch est une matrice carrée
+    vectorizedPatch = Mat::zeros(size*size, 3, CV_32FC1); // Matrice pour stocker x, y, et la valeur du pixel
+
+    for (int x = 0; x < size; ++x) {
+        for (int y = 0; y < size; ++y) {
+            float pixelValue = integratedPatch.at<float>(x, y);
+            vectorizedPatch.at<Vec3f>(x*size + y) = Vec3f(static_cast<float>(x), static_cast<float>(y), pixelValue);
+        }
+    }
+}
+
+float findOptimalDepth(float depthinit, const cv::Mat& K, const cv::Mat& P, const cv::Mat& integratedpatch, const cv::Mat& imsource, const cv::Mat& imtarget, const cv::Mat& patchsource, float depthstep, int nb_profondeur) {
+    float depthmax = 0;
+    float maxzncc = 0;
+    float depth = depthinit - (nb_profondeur / 2) * depthstep;
+
+    for(int i = 1; i < nb_profondeur; i++) {
+        depth += i * depthstep;
+        cv::Mat patchtarget;
+        source2target(depth, K, P, integratedpatch, patchtarget);
+        // Ajouter ici l'interpolation de patchtarget si nécessaire
+
+        float zncc = evaluation_patch(patchsource, patchtarget, imsource, imtarget);
+        if (zncc > maxzncc) {
+            maxzncc = zncc;
+            depthmax = depth;
+        }
+    }
+    return depthmax;
+}
