@@ -10,6 +10,11 @@ using namespace std;
 using namespace cv;
 
 const float FIXED_AMOUNT = 0.1;
+// Display the help for the program
+void help(const char* programName);
+
+// parse the input command line arguments
+bool parseArgs(int argc, char** argv, cv::Mat& imsource, cv::Mat& imtarget, cv::Mat normalmap, cv::Mat& depthmap, cv::Mat& K, cv::Mat& P);
 
 int main(int argc, char** argv)
 {

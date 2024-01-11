@@ -6,6 +6,9 @@
 using namespace std;
 using namespace cv;
 
+float findOptimalDepth(float depthinit, const cv::Mat& K, const cv::Mat& P, const cv::Mat& integratedpatch, const cv::Mat& imsource, const cv::Mat& imtarget, const cv::Mat& patchsource, float depthstep, int nb_profondeur);
+void vectorize_patch(const cv::Mat& integratedPatch, cv::Mat& vectorizedPatch);
+
 //Une amélioration pourrait être d'utiliser autre chose que zncc pour déterminer la similarité entre deux patchs
 float evaluation_patch(const cv::Mat& patchsource, const cv::Mat& patchtarget, const cv::Mat& imsource, const cv::Mat& imtarget) {
     //si les patchs ont la même taille
@@ -34,7 +37,7 @@ float evaluation_patch(const cv::Mat& patchsource, const cv::Mat& patchtarget, c
 }
 
 //a refacto (param et init)
-float patch_integration(Point2f point, const cv::Mat& imsource, const cv::Mat& normalsource,const cv::Mat& imtarget,float depthinit, const::cv::Mat& K, const cv::Mat& P,bool debug=false, const cv::Mat& depthmap=cv::Mat()){
+float patch_integration(Point2f point, const cv::Mat& imsource, const cv::Mat& normalsource,const cv::Mat& imtarget,float depthinit, const::cv::Mat& K, const cv::Mat& P,bool debug, const cv::Mat& depthmap){
     Mat patchsource, patchtarget, patchnormalsource,prepatchnormalsource,integratedpatch;
     cv::Mat preintegratedpatch = Mat::zeros(patchsource.rows, 3, CV_32F);
     int size = 5;
@@ -82,7 +85,7 @@ void source2target(float depth, const cv::Mat& K, const cv::Mat& P, const cv::Ma
             cv::Mat pointR2 = P * cv::Mat(cv::Vec4f(pointR1.at<float>(0), pointR1.at<float>(1), pointR1.at<float>(2), 1.0f));
 
             //reprojection dans I2
-            cv::Mat w2 = pointR2.rowRange(0,2);
+            cv::Mat w2 = pointR2.rowRange(0,2);// il faut aussi diviser par Z (check normalize dans le code matlab)
             cv::Mat p2 = K * w2;
 
             //coordonnées pixel entieres(peut etre pas necessaire/pas bien)         
