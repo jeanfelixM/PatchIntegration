@@ -43,10 +43,13 @@ float patch_integration(Point2f point, const cv::Mat& imsource, const cv::Mat& n
     int size = 5;
     
     
-
+    cout << "avant create patch \n";
     create_patch(imsource, point, patchsource, size);
+    cout << "apres create patch \n";
     if (debug){
+        
         create_patch(depthmap, point, integratedpatch, size);
+       
     }
     else{
         create_patch(normalsource, point, prepatchnormalsource, size);
@@ -60,13 +63,17 @@ float patch_integration(Point2f point, const cv::Mat& imsource, const cv::Mat& n
         normalsIntegration(patchnormalsource, preintegratedpatch);
         vectorize_patch(preintegratedpatch, integratedpatch);
     }
-    float depthcentre = integratedpatch.row(size*size/2 - size/2).at<float>(2);
+    cout << "avant depthcentre \n";
+    cout << "size : "<<size*(size/2) - size/2 << "\n";
+    float depthcentre = integratedpatch.row(size*size/2 - size/2).at<float>(2); //probleme de confusion entre matrice de coordonnée de point et matrice de valeurs
+    cout << "apres depthcentre"<<" \n";
     integratedpatch.col(2) = integratedpatch.col(2)/depthcentre;
 
     //a faire : prunage des points qui ne sont pas dans l'image target (comparer normal du point et direction camera) (ou a integrer dans source2target)
 
     int nb_profondeur = 10; // Nombre de profondeurs testées
     float depthstep = 0.1; // Ou 0.01 à tester
+    cout << "avant findOptimalDepth \n";
     float optimalDepth = findOptimalDepth(depthinit, K, P, integratedpatch, imsource, imtarget, patchsource, depthstep, nb_profondeur);
 
 
@@ -125,7 +132,7 @@ void create_patch(const cv::Mat& im, const Vec2f point, cv::Mat& patch, int size
     }
     
     /*Creation finale du patch qui sera donc les POSITIONS dans le repère IMAGE des pixels concerné*/
-    patch = Mat::zeros(size*size,2, CV_32SC1);
+    patch = Mat::zeros(size*size,2, CV_32SC2);
     for (int i = x1; i < x2; i++){
         for (int j = y1; j < y2; j++){
             patch.at<Vec2i>((i-x1)*(j-y1)+(j-y1)) = Vec2i(i,j);

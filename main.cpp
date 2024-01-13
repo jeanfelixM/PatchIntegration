@@ -1,4 +1,6 @@
 #include <cstring>
+
+
 #include <ctime>
 #include <iostream>
 #include "patch.hpp"
@@ -14,7 +16,7 @@ const float FIXED_AMOUNT = 0.1;
 void help(const char* programName);
 
 // parse the input command line arguments
-bool parseArgs(int argc, char** argv, cv::Mat& imsource, cv::Mat& imtarget, cv::Mat normalmap, cv::Mat& depthmap, cv::Mat& K, cv::Mat& P);
+bool parseArgs(int argc, char** argv, cv::Mat& imsource, cv::Mat& imtarget, cv::Mat& normalmap, cv::Mat& depthmap, cv::Mat& K, cv::Mat& P);
 
 int main(int argc, char** argv)
 {
@@ -26,19 +28,23 @@ int main(int argc, char** argv)
 	cv::Mat K;
 	cv::Mat P;
 	//normalsEstimation(imsource, normalmap);
-	if(!parseArgs(argc, argv, imsource, imtarget, normalmap, K, P, depthmapGT)) {
+	if(!parseArgs(argc, argv, imsource, imtarget, normalmap, depthmapGT,K, P)) {
 		cerr << "Aborting..." << endl;
         return EXIT_FAILURE;
 	}
+    cout << "parsing fini \n";
 	cv::Mat depthmap = cv::Mat::zeros(imsource.rows, imsource.cols, CV_32F);
 	float depth;
     float depthinit;
 	for (int i = 0; i < imsource.rows;i++){
 		for (int j = 0; j < imsource.cols;j++){
+            cout << "i : " << i << ", j : " << j << std::endl;
 			cv::Point2f point(i, j);
 			//depthinit à initialiser intelligement (KDtree avec les points du SfM)
             depthinit = depthmapGT.at<float>(i, j) - FIXED_AMOUNT;
+            cout << "on va dans patch_integration \n";
 			depth = patch_integration(point, imsource, normalmap, imtarget, depthinit, K, P,true,depthmapGT);
+            cout << "on est sorti de patch_integration \n"; 
 			depthmap.at<float>(i,j) = depth;
 		}
 	}
@@ -60,7 +66,7 @@ void help(const char* programName)
 
 
 
-bool parseArgs(int argc, char** argv, cv::Mat& imsource, cv::Mat& imtarget, cv::Mat normalmap, cv::Mat& depthmap, cv::Mat& K, cv::Mat& P)
+bool parseArgs(int argc, char** argv, cv::Mat& imsource, cv::Mat& imtarget, cv::Mat& normalmap, cv::Mat& depthmap, cv::Mat& K, cv::Mat& P)
 {
     string sourceImagePath, targetImagePath, calibFilePath, normalMapPath,depthMapPath;
     FileStorage fs;
@@ -111,7 +117,8 @@ bool parseArgs(int argc, char** argv, cv::Mat& imsource, cv::Mat& imtarget, cv::
         fs["P"] >> P;
     }
 	if(!normalMapPath.empty()) {
-        normalmap = imread(normalMapPath, IMREAD_COLOR);
+        normalmap = imread(normalMapPath,cv::IMREAD_ANYCOLOR | cv::IMREAD_ANYDEPTH);
+        //cout << normalMapPath;
         if(normalmap.empty()) {
             cerr << "Could not open or find the normal map image" << endl;
             return false;
@@ -132,7 +139,12 @@ bool parseArgs(int argc, char** argv, cv::Mat& imsource, cv::Mat& imtarget, cv::
 		}
 	}
 	if (!depthMapPath.empty()) {
-		depthmap = imread(depthMapPath, IMREAD_COLOR);
+		depthmap = imread(depthMapPath,IMREAD_UNCHANGED);
+        cout << depthMapPath;
+        cv::Size sz = depthmap.size();
+
+            // Affichage de la taille
+            cout << "Width: " << sz.width << ", Height: " << sz.height << std::endl << "\n";
 		if (depthmap.empty()) {
 			cerr << "Could not open or find the depth map image" << endl;
 			return false;
