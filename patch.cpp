@@ -15,7 +15,7 @@ float evaluation_patch(const cv::Mat& patchsource, const cv::Mat& patchtarget, c
     if (patchsource.size() != patchtarget.size()) {
         throw std::invalid_argument("Les patchs doivent être de la même taille");
     }
-    Mat srcval,targetval;
+    Mat srcval,targetval; //a refaire : pushval c nul
     for (int i = 0; i < patchsource.rows; ++i) {
         srcval.push_back(imsource.at<float>(patchsource.at<Vec2i>(i).val[0], patchsource.at<Vec2i>(i).val[1]));
         targetval.push_back(imtarget.at<float>(patchtarget.at<Vec2i>(i).val[0], patchtarget.at<Vec2i>(i).val[1]));
@@ -39,7 +39,7 @@ float evaluation_patch(const cv::Mat& patchsource, const cv::Mat& patchtarget, c
 //a refacto (param et init)
 float patch_integration(Point2f point, const cv::Mat& imsource, const cv::Mat& normalsource,const cv::Mat& imtarget,float depthinit, const::cv::Mat& K, const cv::Mat& P,bool debug, const cv::Mat& depthmap){
     Mat patchsource, patchtarget, patchnormalsource,prepatchnormalsource,integratedpatch;
-    cv::Mat preintegratedpatch = Mat::zeros(patchsource.rows, 3, CV_32F);
+    cv::Mat preintegratedpatch = Mat::zeros(patchsource.rows, 3, CV_64F);
     int size = 5;
     
     
@@ -48,26 +48,31 @@ float patch_integration(Point2f point, const cv::Mat& imsource, const cv::Mat& n
     cout << "apres create patch \n";
     if (debug){
         
-        create_patch(depthmap, point, integratedpatch, size);
+        create_patch(depthmap, point, integratedpatch, size, true);
        
     }
     else{
-        create_patch(normalsource, point, prepatchnormalsource, size);
+        create_patch(normalsource, point, prepatchnormalsource, size,false);
         //passer des coordonnées aux valeurs et un-vectoriser
-        cv::Mat patchnormalsource = Mat::zeros(size, size, CV_32F);
+        cv::Mat patchnormalsource = Mat::zeros(size, size, CV_64F);
         for (int i = 0; i < prepatchnormalsource.rows; ++i) {
-            int x = prepatchnormalsource.at<Vec2i>(i).val[0];
-            int y = prepatchnormalsource.at<Vec2i>(i).val[1];
-            patchnormalsource.at<float>(x,y) = normalsource.at<float>(x, y);
+            int x = prepatchnormalsource.at<int>(i,0);
+            int y = prepatchnormalsource.at<int>(i,1);
+            patchnormalsource.at<double>(x,y) = normalsource.at<double>(x, y);
         }
         normalsIntegration(patchnormalsource, preintegratedpatch);
         vectorize_patch(preintegratedpatch, integratedpatch);
     }
     cout << "avant depthcentre \n";
+    cout << "taille de integratedpatch : "<<integratedpatch.size() << "\n";
     cout << "size : "<<size*(size/2) - size/2 << "\n";
-    float depthcentre = integratedpatch.row(size*size/2 - size/2).at<float>(2); //probleme de confusion entre matrice de coordonnée de point et matrice de valeurs
+    int depthcentre = static_cast<int>(integratedpatch.at<double>(size*size/2 - size/2,2)); //probleme de confusion entre matrice de coordonnée de point et matrice de valeurs
+    //int deppp = depthcentre.at<int>(2);
+    cout << "depthcentre : "<<depthcentre << "\n";
     cout << "apres depthcentre"<<" \n";
+    cout << integratedpatch.col(2) << " 1 \n";
     integratedpatch.col(2) = integratedpatch.col(2)/depthcentre;
+    cout << integratedpatch.col(2) << " 2 \n";
 
     //a faire : prunage des points qui ne sont pas dans l'image target (comparer normal du point et direction camera) (ou a integrer dans source2target)
 
@@ -87,19 +92,28 @@ void source2target(float depth, const cv::Mat& K, const cv::Mat& P, const cv::Ma
     // a faire : vectoriser pour eviter les boucles
     for (int i = 0; i < integratedpatch.rows; ++i) {
             //pixel en coordonnées 3D
-            
+            cout << K.type() << "TYPE DE K \n";
+            cout << "avant pointR1 \n";
+            cout << (integratedpatch.row(i).t()).size() << "\n"; 
+            cout << K.inv().size() << "\n";
+            cout << (K.inv()) * (integratedpatch.row(i).t()) << "\n";
             cv::Mat pointR1 = depth * (K.inv() * integratedpatch.row(i).t());
-            cv::Mat pointR2 = P * cv::Mat(cv::Vec4f(pointR1.at<float>(0), pointR1.at<float>(1), pointR1.at<float>(2), 1.0f));
+            cout << "avant pointR2 \n";
+            cv::Mat pointR2 = P * cv::Mat(cv::Vec4f(pointR1.at<double>(0), pointR1.at<double>(1), pointR1.at<double>(2), 1.0f)); //changer les trucs vec vec4f etc..
 
             //reprojection dans I2
+            cout << "avant w2 \n";
             cv::Mat w2 = pointR2.rowRange(0,2);// il faut aussi diviser par Z (check normalize dans le code matlab)
+            cout << "avant p2 \n";
             cv::Mat p2 = K * w2;
 
             //coordonnées pixel entieres(peut etre pas necessaire/pas bien)         
-            int targetX = static_cast<int>(p2.at<float>(0));
-            int targetY = static_cast<int>(p2.at<float>(1));
+            cout << "avant targetX \n";
+            int targetX = static_cast<int>(p2.at<double>(0));
+            int targetY = static_cast<int>(p2.at<double>(1));
 
             //le point projeté est à l'intérieur des limites de l'image
+            cout << "avant if \n";
             if (targetX >= 0 && targetX < patchtarget.cols && targetY >= 0 && targetY < patchtarget.rows) {
                 patchtarget.at<cv::Vec2f>(i) = Vec2f(targetX, targetY);
             }
@@ -107,7 +121,7 @@ void source2target(float depth, const cv::Mat& K, const cv::Mat& P, const cv::Ma
     }
 }
 
-void create_patch(const cv::Mat& im, const Vec2f point, cv::Mat& patch, int size){
+void create_patch(const cv::Mat& im, const cv::Vec2f point, cv::Mat& patch, int size, bool keepval){
     int x = point[0];
     int y = point[1];
     int x1 = x - size/2;
@@ -116,26 +130,38 @@ void create_patch(const cv::Mat& im, const Vec2f point, cv::Mat& patch, int size
     int y2 = y + size/2;
     if (x1 < 0){
         x1 = 0;
-        x2 = size;
     }
     if (y1 < 0){
         y1 = 0;
-        y2 = size;
     }
     if (x2 > im.cols){
         x2 = im.cols;
-        x1 = im.cols - size;
     }
     if (y2 > im.rows){
         y2 = im.rows;
-        y1 = im.rows - size;
     }
     
     /*Creation finale du patch qui sera donc les POSITIONS dans le repère IMAGE des pixels concerné*/
-    patch = Mat::zeros(size*size,2, CV_32SC2);
-    for (int i = x1; i < x2; i++){
-        for (int j = y1; j < y2; j++){
-            patch.at<Vec2i>((i-x1)*(j-y1)+(j-y1)) = Vec2i(i,j);
+    int idx =0;
+    if (keepval){
+        patch = Mat::zeros(size*size,3, CV_64F);
+        for (int i = x1; i < x2; i++){
+            for (int j = y1; j < y2; j++){
+                idx = (i-x1)*(j-y1)+(j-y1);
+                patch.at<double>(idx,0) = i;
+                patch.at<double>(idx,1) = j;
+                patch.at<double>(idx,2) = (im.at<float>(i,j));
+            }
+        }
+    }
+    else{   
+        patch = Mat::zeros(size*size,2, CV_64F);
+        for (int i = x1; i < x2; i++){
+            for (int j = y1; j < y2; j++){
+                idx = (i-x1)*(j-y1)+(j-y1);
+                patch.at<double>(idx,0) = i;
+                patch.at<double>(idx,1) = j;
+            }
         }
     }
 }
@@ -161,6 +187,7 @@ float findOptimalDepth(float depthinit, const cv::Mat& K, const cv::Mat& P, cons
         depth += i * depthstep;
         cv::Mat patchtarget;
         source2target(depth, K, P, integratedpatch, patchtarget);
+        cout << "apres source2target \n";
         // Ajouter ici l'interpolation de patchtarget si nécessaire
 
         float zncc = evaluation_patch(patchsource, patchtarget, imsource, imtarget);

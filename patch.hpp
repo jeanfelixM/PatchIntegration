@@ -11,7 +11,7 @@
  * @param[out] patch Patch
  * @param[in] size Taille du patch
 */
-void create_patch(const cv::Mat& im, const cv::Vec2f point, cv::Mat& patch, int size);
+void create_patch(const cv::Mat& im, const cv::Vec2f point, cv::Mat& patch, int size, bool keepval = false);
 
 /**
 * Projette dans le repère monde le patch de l'image de reference puis le reprojette dans l'image source
