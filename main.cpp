@@ -36,8 +36,8 @@ int main(int argc, char** argv)
 	cv::Mat depthmap = cv::Mat::zeros(imsource.rows, imsource.cols, CV_32F);
 	float depth;
     float depthinit;
-	for (int i = 0; i < imsource.rows;i++){
-		for (int j = 0; j < imsource.cols;j++){
+	for (int i = 50; i < imsource.rows;i++){
+		for (int j = 50; j < imsource.cols;j++){
             cout << "i : " << i << ", j : " << j << std::endl;
 			cv::Point2f point(i, j);
 			//depthinit à initialiser intelligement (KDtree avec les points du SfM)
