@@ -21,7 +21,7 @@ void create_patch(const cv::Mat& im, const cv::Vec2f point, cv::Mat& patch, int 
 * @param[in] patchsource Patch de l'image de départ
 * @param[out] patchtarget Patch de l'image d'arivee
 */
-void source2target(float depth,const cv::Mat& K, const cv::Mat& P, const cv::Mat& patchsource, cv::Mat& patchtarget);
+void source2target(float depth,const cv::Mat& K, const cv::Mat& P1,const cv::Mat& P2, const cv::Mat& patchsource, cv::Mat& patchtarget);
 
 
 /**
@@ -41,7 +41,8 @@ float evaluation_patch(const cv::Mat& patchsource, const cv::Mat& patchtarget, c
  * @param[in] imsource Image source
  * @param[in] imtarget Image d'arrivée
  * @param[in] K Matrice intrinseque de la camera
- * @param[in] P changement de pose entre les deux images, P = (R | t) 4*3 
+ * @param[in] P1 changement de pose entre l'image 1 et le repère monde, P1 = (R1 | t1) 4*3
+ * @param[in] P2 changement de pose entre l'image 2 et le repère monde, P2 = (R2 | t2) 4*3
  * @return Profondeur du point
 */
-float patch_integration(cv::Point2f point, const cv::Mat& imsource, const cv::Mat& normalsource, const cv::Mat& imtarget, float depthinit, const::cv::Mat& K, const cv::Mat& P, bool debug = false, const cv::Mat& depthmap = cv::Mat());
+float patch_integration(cv::Point2f point, const cv::Mat& imsource, const cv::Mat& normalsource, const cv::Mat& imtarget, float depthinit, const::cv::Mat& K, const cv::Mat& P1,const cv::Mat& P2, bool debug = false, const cv::Mat& depthmap = cv::Mat());

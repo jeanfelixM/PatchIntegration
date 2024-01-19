@@ -16,7 +16,7 @@ const float FIXED_AMOUNT = 0.1;
 void help(const char* programName);
 
 // parse the input command line arguments
-bool parseArgs(int argc, char** argv, cv::Mat& imsource, cv::Mat& imtarget, cv::Mat& normalmap, cv::Mat& depthmap, cv::Mat& K, cv::Mat& P);
+bool parseArgs(int argc, char** argv, cv::Mat& imsource, cv::Mat& imtarget, cv::Mat& normalmap, cv::Mat& depthmap, cv::Mat& K, cv::Mat& P1, cv::Mat& P2);
 
 int main(int argc, char** argv)
 {
@@ -26,9 +26,9 @@ int main(int argc, char** argv)
 	cv::Mat imsource;
 	cv::Mat imtarget;
 	cv::Mat K;
-	cv::Mat P;
+	cv::Mat P1, P2;
 	//normalsEstimation(imsource, normalmap);
-	if(!parseArgs(argc, argv, imsource, imtarget, normalmap, depthmapGT,K, P)) {
+	if(!parseArgs(argc, argv, imsource, imtarget, normalmap, depthmapGT, K, P1, P2)) {
 		cerr << "Aborting..." << endl;
         return EXIT_FAILURE;
 	}
@@ -36,20 +36,42 @@ int main(int argc, char** argv)
 	cv::Mat depthmap = cv::Mat::zeros(imsource.rows, imsource.cols, CV_32F);
 	float depth;
     float depthinit;
-	for (int i = 50; i < imsource.rows;i++){
-		for (int j = 50; j < imsource.cols;j++){
-            cout << "i : " << i << ", j : " << j << std::endl;
+	for (int i = 0; i < imsource.rows;i++){
+        cout << "i : " << i << std::endl;
+		for (int j = 0; j < imsource.cols;j++){
+            
 			cv::Point2f point(i, j);
 			//depthinit à initialiser intelligement (KDtree avec les points du SfM)
             depthinit = depthmapGT.at<float>(i, j) - FIXED_AMOUNT;
-            cout << "on va dans patch_integration \n";
-			depth = patch_integration(point, imsource, normalmap, imtarget, depthinit, K, P,true,depthmapGT);
-            cout << "on est sorti de patch_integration \n"; 
+            //cout << "on va dans patch_integration \n";
+			depth = patch_integration(point, imsource, normalmap, imtarget, depthinit, K, P1, P2, true, depthmapGT);
+            //cout << "on est sorti de patch_integration \n"; 
 			depthmap.at<float>(i,j) = depth;
 		}
 	}
 
+    cv::normalize(depthmap, depthmap, 0, 255, cv::NORM_MINMAX, CV_8U);
+
+    cout << depthmap << std::endl;
+
+    std::string filename = "depthmap.png";
+
+    // Save the image in PNG format
+    bool isSuccess = cv::imwrite(filename, depthmap); // imwrite returns true if the image is saved successfully
+
+    // Check for successful saving
+    if (isSuccess) {
+        std::cout << "depthmap is successfully saved as " << filename << std::endl;
+    }
+    else {
+        std::cout << "Failed to save the depthmap" << std::endl;
+        return 1;
+    }
+
+    return 0;
+
 	cv::imshow("depthmap", depthmap);
+    cv::waitKey(0);
 }
 
 void help(const char* programName)
@@ -58,7 +80,7 @@ void help(const char* programName)
          << "Usage: " << programName << endl
          << "     -source <source image>                            # the path to the source image" << endl
          << "     -target <target image>                            # the path to the target image" << endl
-         << "     -calib <calibration file>                         # the path to the XML file containing both K and P matrices" << endl
+         << "     -calib <calibration file>                         # the path to the XML file containing both K and P1 and P2 matrices" << endl
          << "     -normals <normal map image>                       # (optional) the path to the normal map image" << endl
 		 << "     -depthmap <depth map image>                       # (optional) the path to the depth map image" << endl
          << endl;
@@ -66,7 +88,8 @@ void help(const char* programName)
 
 
 
-bool parseArgs(int argc, char** argv, cv::Mat& imsource, cv::Mat& imtarget, cv::Mat& normalmap, cv::Mat& depthmap, cv::Mat& K, cv::Mat& P)
+
+bool parseArgs(int argc, char** argv, cv::Mat& imsource, cv::Mat& imtarget, cv::Mat& normalmap, cv::Mat& depthmap, cv::Mat& K, cv::Mat& P1, cv::Mat& P2)
 {
     string sourceImagePath, targetImagePath, calibFilePath, normalMapPath,depthMapPath;
     FileStorage fs;
@@ -114,7 +137,8 @@ bool parseArgs(int argc, char** argv, cv::Mat& imsource, cv::Mat& imtarget, cv::
             return false;
         }
         fs["K"] >> K;
-        fs["P"] >> P;
+        fs["P1"] >> P1;  // Load P1
+        fs["P2"] >> P2;  // Load P2
     }
 	if(!normalMapPath.empty()) {
         normalmap = imread(normalMapPath,cv::IMREAD_ANYCOLOR | cv::IMREAD_ANYDEPTH);
