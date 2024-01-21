@@ -82,8 +82,8 @@ float patch_integration(Point2f point, const cv::Mat& imsource, const cv::Mat& n
 
     //a faire : prunage des points qui ne sont pas dans l'image target (comparer normal du point et direction camera) (ou a integrer dans source2target)
 
-    int nb_profondeur = 14; // Nombre de profondeurs testées
-    float depthstep = 0.025; // Ou 0.01 à tester
+    int nb_profondeur = 10; // Nombre de profondeurs testées
+    float depthstep = 0.015; // Ou 0.01 à tester
     //cout << "avant findOptimalDepth \n";
     float optimalDepth = findOptimalDepth(depthinit, K, P1,P2, integratedpatch, imsource, imtarget, patchsource, depthstep, nb_profondeur);
 
@@ -153,27 +153,30 @@ void create_patch(const cv::Mat& im, const cv::Vec2f point, cv::Mat& patch, int 
     int y2 = y + size/2;
     if (x1 < 0){
         x1 = 0;
-        x2 = size;
+        x2 = size-1;
     }
     if (y1 < 0){
         y1 = 0;
-        y2 = size;
+        y2 = size-1;
     }
-    if (x2 > im.cols){
-        x2 = im.cols;
-        x1 = im.cols - size;
+    if (x2 >= im.cols){
+        x2 = im.cols-1;
+        x1 = im.cols - size ;
     }
-    if (y2 > im.rows){
-        y2 = im.rows;
+    if (y2 >= im.rows){
+        y2 = im.rows-1;
         y1 = im.rows - size;
     }
-    
+    //cout << "x1 : "<<x1<<"\n";
+    //cout << "y1 : "<<y1<<"\n";
+    //cout << "x2 : "<<x2<<"\n";
+    //cout << "y2 : "<<y2<<"\n";
     /*Creation finale du patch qui sera donc les POSITIONS dans le repère IMAGE des pixels concerné*/
     int idx =0;
     if (keepval){
         patch = Mat::zeros(size*size,3, CV_32F);
-        for (int i = x1; (i < x1 + size) && (i < im.cols); i++){
-            for (int j = y1; j < y1 + size && (j < im.rows); j++){
+        for (int i = x1; (i <= x2); i++){
+            for (int j = y1; j <= y2; j++){
                 idx = (i-x1)*(size) +(j-y1);
                 patch.at<float>(idx,0) = i;
                 patch.at<float>(idx,1) = j;
@@ -183,9 +186,9 @@ void create_patch(const cv::Mat& im, const cv::Vec2f point, cv::Mat& patch, int 
     }
     else{   
         patch = Mat::zeros(size*size,2, CV_32F);
-        for (int i = x1; i < x2; i++){
-            for (int j = y1; j < y2; j++){
-                idx = (i-x1)*(j-y1)+(j-y1);
+        for (int i = x1; (i <= x2); i++){
+            for (int j = y1; j <= y2; j++){
+                idx = (i-x1)*(size)+(j-y1);
                 patch.at<float>(idx,0) = i;
                 patch.at<float>(idx,1) = j;
             }
