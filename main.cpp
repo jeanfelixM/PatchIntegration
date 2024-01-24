@@ -43,12 +43,12 @@ int main(int argc, char** argv)
 			cv::Point2f point(i, j);
 			//depthinit à initialiser intelligement (KDtree avec les points du SfM)
             depthinit = depthmapGT.at<float>(i, j) + 5;
-            cout << "depthinit : " << depthinit << std::endl;
+            //cout << "depthinit : " << depthinit << std::endl;
             //cout << "on va dans patch_integration \n";
 			depth = patch_integration(point, imsource, normalmap, imtarget, depthinit, K, P1, P2, true, depthmapGT);
             //cout << "on est sorti de patch_integration \n"; 
 			depthmap.at<float>(i,j) = depth;
-            cout << "depth : " << depth << std::endl;
+            //cout << "depth : " << depth << std::endl;
 		}
 	}
 
