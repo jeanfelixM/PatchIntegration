@@ -33,16 +33,41 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
 	}
     cout << "parsing fini \n";
+
+    if (imsource.empty() || imtarget.empty() || normalmap.empty() || depthmapGT.empty()) {
+    cerr << "Une ou plusieurs images n'ont pas été chargées correctement." << endl;
+    return EXIT_FAILURE;
+}
+
+    // Visualisation des images
+    cv::namedWindow("Image Source", cv::WINDOW_AUTOSIZE);
+    cv::imshow("Image Source", imsource);
+
+    cv::namedWindow("Image Target", cv::WINDOW_AUTOSIZE);
+    cv::imshow("Image Target", imtarget);
+
+    cv::namedWindow("Normal Map", cv::WINDOW_AUTOSIZE);
+    cv::imshow("Normal Map", normalmap);
+
+    cv::namedWindow("Depth Map GT", cv::WINDOW_AUTOSIZE);
+    cv::imshow("Depth Map GT", depthmapGT);
+
+    cout << "Ground truth depth map size : " << depthmapGT.size() << std::endl;
+    cout << "Ground truth depth map type : " << depthmapGT.type() << std::endl;
+
+    cv::waitKey(0); // Attendre que l'utilisate
+
 	cv::Mat depthmap = cv::Mat::zeros(imsource.rows, imsource.cols, CV_32F);
 	float depth;
     float depthinit;
-	for (int i = 0; i < imsource.rows;i++){
+	for (int i = 50; i < imsource.rows;i++){
         cout << "i : " << i << std::endl;
-		for (int j = 0; j < imsource.cols;j++){
+		for (int j = 50; j < imsource.cols;j++){
             
 			cv::Point2f point(i, j);
 			//depthinit à initialiser intelligement (KDtree avec les points du SfM)
-            depthinit = depthmapGT.at<float>(i, j) + 5;
+            depthinit = depthmapGT.at<float>(i, j) ;//+ 5;
+            cout << "depthinit : " << depthinit << std::endl;
             //cout << "depthinit : " << depthinit << std::endl;
             //cout << "on va dans patch_integration \n";
 			depth = patch_integration(point, imsource, normalmap, imtarget, depthinit, K, P1, P2, true, depthmapGT);
@@ -95,6 +120,7 @@ void help(const char* programName)
 
 bool parseArgs(int argc, char** argv, cv::Mat& imsource, cv::Mat& imtarget, cv::Mat& normalmap, cv::Mat& depthmap, cv::Mat& K, cv::Mat& P1, cv::Mat& P2)
 {
+    cv::Mat predepthmap;
     string sourceImagePath, targetImagePath, calibFilePath, normalMapPath,depthMapPath;
     FileStorage fs;
 
@@ -167,16 +193,19 @@ bool parseArgs(int argc, char** argv, cv::Mat& imsource, cv::Mat& imtarget, cv::
 		}
 	}
 	if (!depthMapPath.empty()) {
-		depthmap = imread(depthMapPath,IMREAD_UNCHANGED);
+		predepthmap = imread(depthMapPath,IMREAD_UNCHANGED);
         cout << depthMapPath;
-        cv::Size sz = depthmap.size();
+        cv::Size sz = predepthmap.size();
 
             // Affichage de la taille
             cout << "Width: " << sz.width << ", Height: " << sz.height << std::endl << "\n";
-		if (depthmap.empty()) {
+		if (predepthmap.empty()) {
 			cerr << "Could not open or find the depth map image" << endl;
 			return false;
 		}
+        
+        predepthmap.convertTo(depthmap, CV_32F,1.0 / 255.0);
+        
 	}
     return true;
 }

@@ -14,6 +14,7 @@ void vectorize_patch(const cv::Mat& integratedPatch, cv::Mat& vectorizedPatch);
 void debugPatch(const cv::Mat& patchsource, const cv::Mat& patchtarget, const cv::Mat& imsource, const cv::Mat& imtarget, double scaleFactor=1.5);
 
 //Une amélioration pourrait être d'utiliser autre chose que zncc pour déterminer la similarité entre deux patchs
+//ZNCC A REFAIRE CAR LA CA PREND LES COORDONNE ET PAS LES VALEURS
 float evaluation_patch(const cv::Mat& patchsource, const cv::Mat& patchtarget, const cv::Mat& imsource, const cv::Mat& imtarget) {
     //si les patchs ont la même taille
     //cout << "avant if de evaluation_patch \n";
@@ -81,12 +82,13 @@ float patch_integration(Point2f point, const cv::Mat& imsource, const cv::Mat& n
     //cout << "depthcentre : "<<depthcentre << "\n";
     //cout << "apres depthcentre"<<" \n";
     //cout << integratedpatch << " 1 \n";
+    cout << integratedpatch.col(2) << " 2 \n";  
     integratedpatch.col(2) = integratedpatch.col(2)/depthcentre;
     //cout << integratedpatch.col(2) << " 2 \n";
 
     //a faire : prunage des points qui ne sont pas dans l'image target (comparer normal du point et direction camera) (ou a integrer dans source2target)
 
-    int nb_profondeur = 10; // Nombre de profondeurs testées
+    int nb_profondeur = 1; // Nombre de profondeurs testées
     float depthstep = 0.01; // Ou 0.01 à tester
     //cout << "avant findOptimalDepth \n";
     float optimalDepth = findOptimalDepth(depthinit, K, P1,P2, integratedpatch, imsource, imtarget, patchsource, depthstep, nb_profondeur);
@@ -100,9 +102,10 @@ float patch_integration(Point2f point, const cv::Mat& imsource, const cv::Mat& n
 */
 void source2target(float depth, const cv::Mat& K, const cv::Mat& P1,const cv::Mat& P2, const cv::Mat& integratedpatch, cv::Mat& patchtarget) {
     // a faire : vectoriser pour eviter les boucles
+    patchtarget = Mat::zeros(integratedpatch.rows, 2, CV_32F);
     for (int i = 0; i < integratedpatch.rows; ++i) {
             //pixel en coordonnées 3D
-            patchtarget = Mat::zeros(integratedpatch.rows, 2, CV_32F);
+           
             //cout << K.type() << "TYPE DE K \n";
             //cout << "avant pointR1 \n";
             //cout << (integratedpatch.row(i).t()).size() << "\n"; 
@@ -113,15 +116,19 @@ void source2target(float depth, const cv::Mat& K, const cv::Mat& P1,const cv::Ma
             cv::Mat w1 = (K.inv() * p1);
             cout << "p1 : "<<p1<<"\n";
             cout << "w1 : "<<w1<<"\n";
+            cout << "depth : "<<depth<<"\n";
             cv::Mat pointR1 = depth*integratedpatch.at<float>(i,2) * w1;
-            cv::Mat R1 = P1.rowRange(0, 3).colRange(0, 3);
-            cv::Mat t1 = P1.rowRange(0, 3).col(3);
-            cout << "R1 : "<<R1<<"\n";
-            cout << "t1 : "<<t1<<"\n";
-            cout << "P2 : "<<P2<<"\n";
+            cv::Mat R2 = P2.rowRange(0, 3).colRange(0, 3);
+            cv::Mat t2 = P2.rowRange(0, 3).col(3);
+            cout << "R2 : "<<R2<<"\n";
+            cout << "t2 : "<<t2<<"\n";
+            cout << "P1 : "<<P1<<"\n";
             cout << "K : "<<K<<"\n";
-            cv:Mat pointWorld = R1.inv() * pointR1 + t1; // ICI MULTIPLIER PAR R1^-1 ET EN DESSOUS PAR R2 (il faudra donc charger deux matrices de rot, car la rot entre 1 et 2 sera R1^-1 * R2 (de meme pour t car on les centres))
-            cv::Mat pointR2 = P2 * cv::Mat(cv::Vec4f(pointR1.at<float>(0), pointR1.at<float>(1), pointR1.at<float>(2), 1.0f)); //changer les trucs vec vec4f etc..
+            cv:Mat pointWorld = P1 * cv::Mat(cv::Vec4f(pointR1.at<float>(0), pointR1.at<float>(1), pointR1.at<float>(2), 1.0f));
+            cout << "R2t : "<<R2.t()<<"\n";
+            cout << "t2t : "<< R2.t() * t2<<"\n";
+            cout << "pointWorld : "<<pointWorld<<"\n";
+            cv::Mat pointR2 = R2.t() * pointWorld - R2.t() * t2;
             
             cout << "pointR1 : "<<pointR1<<"\n";
             cout << "pointR2 : "<<pointR2<<"\n";
@@ -145,8 +152,10 @@ void source2target(float depth, const cv::Mat& K, const cv::Mat& P1,const cv::Ma
             //le point projeté est à l'intérieur des limites de l'image
             //cout << "avant if de source to target \n";
             //if (targetX >= 0 && targetX < patchtarget.cols && targetY >= 0 && targetY < patchtarget.rows) {
-                patchtarget.at<float>(i,0) = targetX; // 
-                patchtarget.at<float>(i,1) = targetY;
+            patchtarget.at<float>(i,0) = targetX; // 
+            patchtarget.at<float>(i,1) = targetY;
+            cout << "i et patchtarge(i,0) et patchtarget(i,1) : "<<i<<" "<<patchtarget.at<float>(i,0)<<" "<<patchtarget.at<float>(i,1)<<"\n";
+            
             //}
         
     }
@@ -181,7 +190,21 @@ void create_patch(const cv::Mat& im, const cv::Vec2f point, cv::Mat& patch, int 
     //cout << "y2 : "<<y2<<"\n";
     /*Creation finale du patch qui sera donc les POSITIONS dans le repère IMAGE des pixels concerné*/
     int idx =0;
+    float scale = 5.0;
     if (keepval){
+        cv::Rect roi(x1, y1, x2 - x1, y2 - y1);
+        cv::Mat im_with_rect = im.clone();
+        cv::rectangle(im_with_rect, roi, cv::Scalar(0, 255, 0), 2); // Green rectangle with thickness 2
+
+        // Rescale the image with rectangle if scale is not 1.0
+        if (scale != 1.0) {
+            cv::resize(im_with_rect, im_with_rect, cv::Size(), scale, scale);
+        }
+
+        // Display the original image with the patch rectangle
+        cv::namedWindow("Image with Patch", cv::WINDOW_AUTOSIZE);
+        cv::imshow("Image with Patch", im_with_rect);
+        cv::waitKey(0); // Wait for a key press
         patch = Mat::zeros(size*size,3, CV_32F);
         for (int i = x1; (i <= x2); i++){
             for (int j = y1; j <= y2; j++){
@@ -221,8 +244,7 @@ float findOptimalDepth(float depthinit, const cv::Mat& K, const cv::Mat& P1,cons
     float maxzncc = 0;
     float depth = depthinit - (nb_profondeur / 2) * depthstep;
     cv::Mat patchmax;
-    for(int i = 1; i < nb_profondeur; i++) {
-        depth += i * depthstep;
+    for(int i = 0; i < nb_profondeur; i++) {
         cv::Mat patchtarget;
         
         source2target(depth, K, P1,P2, integratedpatch, patchtarget);
@@ -230,13 +252,16 @@ float findOptimalDepth(float depthinit, const cv::Mat& K, const cv::Mat& P1,cons
         // Ajouter ici l'interpolation de patchtarget si nécessaire
 
         float zncc = evaluation_patch(patchsource, patchtarget, imsource, imtarget);
+        cout << "patchtarget dans findOptimalDepth : "<<patchtarget<<"\n ";
         if (zncc > maxzncc) {
             maxzncc = zncc;
             depthmax = depth;
             patchmax = patchtarget.clone();
-            //cout << patchtarget << " \n";
+            
+            cout << "patchmax dans findOptimalDepth : "<<patchmax<<"\n";
         }
         //cout <<"apres if de source to target \n";
+        depth += depthstep;
     }
 
     int x_source, y_source, x_target, y_target;
@@ -252,6 +277,8 @@ void debugPatch(const cv::Mat& patchsource, const cv::Mat& patchtarget, const cv
     // Vérification que patchsource et patchtarget sont valides (N*2)
     if (patchsource.cols != 2 || patchtarget.cols != 2) {
         std::cout << "patchsource ou patchtarget n'ont pas la bonne taille." << std::endl;
+        cout << "patchsource : " << patchsource.size() << endl;
+        cout << "patchtarget : " << patchtarget.size() << endl;
         return;
     }
 
@@ -266,12 +293,13 @@ void debugPatch(const cv::Mat& patchsource, const cv::Mat& patchtarget, const cv
 
     // Dessiner les points de patchsource sur imsource_resized
     for (int i = 0; i < patchsource.rows; ++i) {
-        cv::circle(imsource_resized, cv::Point(patchsource.at<float>(i, 0) * scaleFactor, patchsource.at<float>(i, 1) * scaleFactor), 2, cv::Scalar(0, 255, 0), -1);
+        cv::circle(imsource_resized, cv::Point(patchsource.at<float>(i, 0) * scaleFactor, patchsource.at<float>(i, 1) * scaleFactor), 20, cv::Scalar(0, 255, 0), -1);
     }
 
     // Dessiner les points de patchtarget sur imtarget_resized
+    cout << "patchtarget : " << patchtarget << endl;
     for (int i = 0; i < patchtarget.rows; ++i) {
-        cv::circle(imtarget_resized, cv::Point(patchtarget.at<float>(i, 0) * scaleFactor, patchtarget.at<float>(i, 1) * scaleFactor), 2, cv::Scalar(0, 255, 0), -1);
+        cv::circle(imtarget_resized, cv::Point(patchtarget.at<float>(i, 0) * scaleFactor, patchtarget.at<float>(i, 1) * scaleFactor), 20, cv::Scalar(0, 255, 0), -1);
     }
 
     // Dessiner un rectangle autour des ROI pour les visualiser plus facilement
