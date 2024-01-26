@@ -33,7 +33,7 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
 	}
     cout << "parsing fini \n";
-
+    cout << depthmapGT << std::endl;
     if (imsource.empty() || imtarget.empty() || normalmap.empty() || depthmapGT.empty()) {
     cerr << "Une ou plusieurs images n'ont pas été chargées correctement." << endl;
     return EXIT_FAILURE;
@@ -193,7 +193,7 @@ bool parseArgs(int argc, char** argv, cv::Mat& imsource, cv::Mat& imtarget, cv::
 		}
 	}
 	if (!depthMapPath.empty()) {
-		predepthmap = imread(depthMapPath,IMREAD_UNCHANGED);
+		predepthmap = imread(depthMapPath,cv::IMREAD_UNCHANGED);
         cout << depthMapPath;
         cv::Size sz = predepthmap.size();
 
@@ -203,8 +203,9 @@ bool parseArgs(int argc, char** argv, cv::Mat& imsource, cv::Mat& imtarget, cv::
 			cerr << "Could not open or find the depth map image" << endl;
 			return false;
 		}
-        
-        predepthmap.convertTo(depthmap, CV_32F,1.0 / 255.0);
+        //cout << "predpthmap : " << predepthmap << std::endl;
+        predepthmap = 3.3983 * predepthmap;
+        predepthmap.convertTo(depthmap, CV_32F);
         
 	}
     return true;

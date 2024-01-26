@@ -106,52 +106,33 @@ void source2target(float depth, const cv::Mat& K, const cv::Mat& P1,const cv::Ma
     for (int i = 0; i < integratedpatch.rows; ++i) {
             //pixel en coordonnées 3D
            
-            //cout << K.type() << "TYPE DE K \n";
-            //cout << "avant pointR1 \n";
-            //cout << (integratedpatch.row(i).t()).size() << "\n"; 
-            //cout << K.inv().size() << "\n";
-            //cout << (K.inv()) * (integratedpatch.row(i).t()) << "\n";
+    
             
             cv::Mat p1 = cv::Mat(cv::Vec3f(integratedpatch.at<float>(i,0), integratedpatch.at<float>(i,1), 1.0f));
             cv::Mat w1 = (K.inv() * p1);
-            cout << "p1 : "<<p1<<"\n";
             cout << "w1 : "<<w1<<"\n";
-            cout << "depth : "<<depth<<"\n";
-            cv::Mat pointR1 = depth*integratedpatch.at<float>(i,2) * w1;
+            cv::Mat pointR1 = depth * integratedpatch.at<float>(i,2) * w1;
             cv::Mat R2 = P2.rowRange(0, 3).colRange(0, 3);
             cv::Mat t2 = P2.rowRange(0, 3).col(3);
-            cout << "R2 : "<<R2<<"\n";
-            cout << "t2 : "<<t2<<"\n";
-            cout << "P1 : "<<P1<<"\n";
-            cout << "K : "<<K<<"\n";
-            cv:Mat pointWorld = P1 * cv::Mat(cv::Vec4f(pointR1.at<float>(0), pointR1.at<float>(1), pointR1.at<float>(2), 1.0f));
-            cout << "R2t : "<<R2.t()<<"\n";
-            cout << "t2t : "<< R2.t() * t2<<"\n";
-            cout << "pointWorld : "<<pointWorld<<"\n";
-            cv::Mat pointR2 = R2.t() * pointWorld - R2.t() * t2;
-            
             cout << "pointR1 : "<<pointR1<<"\n";
-            cout << "pointR2 : "<<pointR2<<"\n";
-            cv::Mat w2 = pointR2 / pointR2.at<float>(2);
+            cout << "pointR1 augmente : " << cv::Mat(cv::Vec4f(pointR1.at<float>(0), pointR1.at<float>(1), pointR1.at<float>(2), 1.0f))    <<"\n";
+            cv:Mat pointWorld = P1 * cv::Mat(cv::Vec4f(pointR1.at<float>(0), pointR1.at<float>(1), pointR1.at<float>(2), 1.0f));
+            cout << "pointWorld : "<<pointWorld<<"\n";
+
+
+            cv::Mat pointR2 = R2.t() * pointWorld - R2.t() * t2;
+
+            cv::Mat w2 = pointR2 ;
             cv::Mat pp2 = K * w2;
-            cout << "w2 : "<<w2<<"\n";
-            cout << "pp2 : "<<pp2<<"\n";
+            pp2 = pp2 / pp2.at<float>(2);
+
             cv::Mat p2 = pp2.rowRange(0, 2);
-            //cout << "p2 size : "<<p2.size()<<"\n";
+            
 
             //coordonnées pixel entieres(peut etre pas necessaire/pas bien)         
-            //cout << "avant targetX \n";
+            
             int targetX = static_cast<int>(p2.at<float>(0));
             int targetY = static_cast<int>(p2.at<float>(1));
-            cout << "targetX : "<<targetX<<"\n";
-            cout << "targetY : "<<targetY<<"\n";
-
-            //cout << "P : "<<P1<<"\n";
-            //cout << "pattarget cols : "<<patchtarget.cols<<"\n";
-            //cout << "pattarget rows : "<<patchtarget.rows<<"\n";
-            //le point projeté est à l'intérieur des limites de l'image
-            //cout << "avant if de source to target \n";
-            //if (targetX >= 0 && targetX < patchtarget.cols && targetY >= 0 && targetY < patchtarget.rows) {
             patchtarget.at<float>(i,0) = targetX; // 
             patchtarget.at<float>(i,1) = targetY;
             cout << "i et patchtarge(i,0) et patchtarget(i,1) : "<<i<<" "<<patchtarget.at<float>(i,0)<<" "<<patchtarget.at<float>(i,1)<<"\n";
@@ -242,7 +223,7 @@ void vectorize_patch(const cv::Mat& integratedPatch, cv::Mat& vectorizedPatch) {
 float findOptimalDepth(float depthinit, const cv::Mat& K, const cv::Mat& P1,const cv::Mat& P2, const cv::Mat& integratedpatch, const cv::Mat& imsource, const cv::Mat& imtarget, const cv::Mat& patchsource, float depthstep, int nb_profondeur) {
     float depthmax = 0;
     float maxzncc = 0;
-    float depth = depthinit - (nb_profondeur / 2) * depthstep;
+    float depth = (depthinit - (nb_profondeur / 2) * depthstep);
     cv::Mat patchmax;
     for(int i = 0; i < nb_profondeur; i++) {
         cv::Mat patchtarget;
@@ -252,13 +233,13 @@ float findOptimalDepth(float depthinit, const cv::Mat& K, const cv::Mat& P1,cons
         // Ajouter ici l'interpolation de patchtarget si nécessaire
 
         float zncc = evaluation_patch(patchsource, patchtarget, imsource, imtarget);
-        cout << "patchtarget dans findOptimalDepth : "<<patchtarget<<"\n ";
+        //cout << "patchtarget dans findOptimalDepth : "<<patchtarget<<"\n ";
         if (zncc > maxzncc) {
             maxzncc = zncc;
             depthmax = depth;
             patchmax = patchtarget.clone();
             
-            cout << "patchmax dans findOptimalDepth : "<<patchmax<<"\n";
+            //cout << "patchmax dans findOptimalDepth : "<<patchmax<<"\n";
         }
         //cout <<"apres if de source to target \n";
         depth += depthstep;
@@ -266,7 +247,7 @@ float findOptimalDepth(float depthinit, const cv::Mat& K, const cv::Mat& P1,cons
 
     int x_source, y_source, x_target, y_target;
     x_source = y_source = x_target = y_target = 10; // exemple de positions, à ajuster selon vos besoins
-    
+    cout << "depthinit : "<<depthinit<<"\n";
     debugPatch(patchsource, patchmax, imsource, imtarget,10.5);
 
     return depthmax;
@@ -297,7 +278,7 @@ void debugPatch(const cv::Mat& patchsource, const cv::Mat& patchtarget, const cv
     }
 
     // Dessiner les points de patchtarget sur imtarget_resized
-    cout << "patchtarget : " << patchtarget << endl;
+    //cout << "patchtarget : " << patchtarget << endl;
     for (int i = 0; i < patchtarget.rows; ++i) {
         cv::circle(imtarget_resized, cv::Point(patchtarget.at<float>(i, 0) * scaleFactor, patchtarget.at<float>(i, 1) * scaleFactor), 20, cv::Scalar(0, 255, 0), -1);
     }
