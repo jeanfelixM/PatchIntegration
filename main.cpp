@@ -60,14 +60,14 @@ int main(int argc, char** argv)
 	cv::Mat depthmap = cv::Mat::zeros(imsource.rows, imsource.cols, CV_32F);
 	float depth;
     float depthinit;
-	for (int i = 50; i < imsource.rows;i++){
-        cout << "i : " << i << std::endl;
-		for (int j = 50; j < imsource.cols;j++){
+	for (int i = 0; i < imsource.rows;i++){
+        //cout << "i : " << i << std::endl;
+		for (int j = 0; j < imsource.cols;j++){
             
 			cv::Point2f point(i, j);
 			//depthinit à initialiser intelligement (KDtree avec les points du SfM)
             depthinit = depthmapGT.at<float>(i, j) ;//+ 5;
-            cout << "depthinit : " << depthinit << std::endl;
+            //cout << "depthinit : " << depthinit << std::endl;
             //cout << "depthinit : " << depthinit << std::endl;
             //cout << "on va dans patch_integration \n";
 			depth = patch_integration(point, imsource, normalmap, imtarget, depthinit, K, P1, P2, true, depthmapGT);
@@ -77,13 +77,13 @@ int main(int argc, char** argv)
 		}
 	}
 
-    cout << depthmap << std::endl;
+    //cout << depthmap << std::endl;
 
     cv::normalize(depthmap, depthmap, 0, 255, cv::NORM_MINMAX);
 
-    cout << depthmap << std::endl;
+    //cout << depthmap << std::endl;
 
-    std::string filename = "depthmap.png";
+    std::string filename = "depthmap.tiff";
 
     // Save the image in PNG format
     bool isSuccess = cv::imwrite(filename, depthmap); // imwrite returns true if the image is saved successfully
