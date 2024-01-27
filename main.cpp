@@ -204,7 +204,7 @@ bool parseArgs(int argc, char** argv, cv::Mat& imsource, cv::Mat& imtarget, cv::
 			return false;
 		}
         //cout << "predpthmap : " << predepthmap << std::endl;
-        predepthmap = 3.3983 * predepthmap;
+        predepthmap =  predepthmap;
         predepthmap.convertTo(depthmap, CV_32F);
         
 	}

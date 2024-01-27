@@ -21,7 +21,7 @@ void create_patch(const cv::Mat& im, const cv::Vec2f point, cv::Mat& patch, int 
 * @param[in] patchsource Patch de l'image de départ
 * @param[out] patchtarget Patch de l'image d'arivee
 */
-void source2target(float depth,const cv::Mat& K, const cv::Mat& P1,const cv::Mat& P2, const cv::Mat& patchsource, cv::Mat& patchtarget);
+void source2target(float depth, const cv::Mat& K, const cv::Mat& P1,const cv::Mat& P2, const cv::Mat& integratedpatch, cv::Mat& patchtarget,int boundcols, int boundrows);
 
 
 /**
