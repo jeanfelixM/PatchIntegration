@@ -36,10 +36,8 @@ __global__ void vconcat(float* A, int A_rows, float* B, int B_rows, float* C, in
 
     if (row < C_rows && col < cols) {
         if (row < A_rows) {
-            // Copier depuis la matrice A
             C[row * cols + col] = A[row * cols + col];
         } else {
-            // Copier depuis la matrice B
             C[row * cols + col] = B[(row - A_rows) * cols + col];
         }
     }
@@ -51,10 +49,8 @@ __global__ void hconcat(float* A, int A_cols, float* B, int B_cols, float* C, in
 
     if (row < rows && col < C_cols) {
         if (col < A_cols) {
-            // Copier depuis la matrice A
             C[row * C_cols + col] = A[row * A_cols + col];
         } else {
-            // Copier depuis la matrice B
             C[row * C_cols + col] = B[row * B_cols + (col - A_cols)];
         }
     }
