@@ -216,7 +216,53 @@ float evaluation_patch(const cv::Mat& patchsource, const cv::Mat& patchtarget, c
     return zncc;
 }
 
+float zncc_cuda(float* patchsource, float* patchtarget, float* imsource, float* imtarget,constant int rows) {
+    float* impatchsource[rows];
+    float* impatchtarget[rows];
+    float* std1[rows];
+    float* std2[rows];
+    float* cov[rows];
+    float* ps1[rows/B];
+    float* ps2[rows/B];
+    float* ps3[rows/B];
+    float* s1[1];
+    float* s2[1];
+    float* v1[1];
+    float* v2[1];
+    float* covt[1];
 
+    copatch_to_impatch<<<B,T>>>(imsource, patchsource, impatchsource,rows);
+    copatch_to_impatch<<<B,T>>>(imtarget, patchtarget, impatchtarget,rows);
+
+    cudaDeviceSynchronize();
+
+    reduce_sum<<<B,T>>>(ps1,impatchsource,rows);
+    reduce_sum<<<B,T>>>(ps2,impatchtarget,rows);
+
+    cudaDeviceSynchronize();
+
+    reduce_sum<<<1,T2>>>(s1,ps1,rows/B);
+    reduce_sum<<<1,T2>>>(s2,ps2,rows/B);
+
+    cudaDeviceSynchronize();
+
+    variance<<<B,T>>>(impatchsource,impatchtarget,std1,std2,cov,s1[0],s2[0],rows);
+
+    cudaDeviceSynchronize();
+    reduce_sum<<<B,T>>>(ps1,std1,rows);
+    reduce_sum<<<B,T>>>(ps2,std2,rows);
+    reduce_sum<<<B,T>>>(ps3,cov,rows);
+
+    cudaDeviceSynchronize();
+
+    reduce_sum<<<1,T2>>>(v1,ps1,rows/B);
+    reduce_sum<<<1,T2>>>(v2,ps2,rows/B);
+    reduce_sum<<<1,T2>>>(covt,ps3,rows/B);
+
+    cudaDeviceSynchronize();
+
+    return covt[0]/sqrt(v1[0]*v2[0]);
+}
 
 
 //a refacto (param et init)
