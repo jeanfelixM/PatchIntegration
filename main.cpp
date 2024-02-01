@@ -7,6 +7,7 @@
 #include "normals.hpp"
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 
 using namespace std;
 using namespace cv;
@@ -40,7 +41,7 @@ int main(int argc, char** argv)
         cerr << "Une ou plusieurs images n'ont pas été chargées correctement." << endl;
         return EXIT_FAILURE;
     }
-    int base = 1;
+    int base = 0;
     P1 = Pmats[base];
     cout << "P1 : " << P1 << std::endl;
     // Visualisation des images
@@ -63,6 +64,10 @@ int main(int argc, char** argv)
 	cv::Mat depthmap = cv::Mat::zeros(imsource.rows, imsource.cols, CV_32F);
 	float depth;
     float depthinit;
+    float zncctab[8];
+    float distancetab[8];
+    float szncc = 0;
+    float sdistance = 0;
     for (size_t i = 0; i < targetImages.size(); ++i) {
         cv::Mat imtarget = targetImages[i];
         cv::Mat P2;
@@ -76,28 +81,92 @@ int main(int argc, char** argv)
         //cv::namedWindow("Image Target", cv::WINDOW_AUTOSIZE);
         //cv::imshow("Image Target", imtarget);
         //cv::waitKey(0); // Attendre que l'utilisate
-        cout << "Processing target image " << (i + 1) << " / " << targetImages.size() << endl;
+        std::cout << "Processing target image " << (i + 1) << " / " << targetImages.size() << endl;
         //cout << "With P2 : " << P2 << endl;
-        for (int i = 0; i < imsource.rows;i++){
+        cv::Mat debugzncc = cv::Mat::zeros(imsource.rows, imsource.cols, CV_32F);
+        cv::Mat debugdistance = cv::Mat::zeros(imsource.rows, imsource.cols, CV_32F);
+        for (int i = 50; i < imsource.rows;i++){
             //cout << "i : " << i << std::endl;
-            for (int j = 0; j < imsource.cols;j++){
+            for (int j = 50; j < imsource.cols;j++){
+                float debugtab[2];
                 
                 cv::Point2f point(i, j);
                 //depthinit à initialiser intelligement (KDtree avec les points du SfM)
-                depthinit = depthmapGT.at<float>(i, j) ;//+ 5;
+                depthinit = depthmapGT.at<float>(i, j) + 0.07;
+                //cout << "on init avec : " << depthinit << std::endl;
+                //cout << "depthGT = " << depthmapGT.at<float>(i, j) << std::endl;
                 //cout << "depthinit : " << depthinit << std::endl;
                 //cout << "depthinit : " << depthinit << std::endl;
                 //cout << "on va dans patch_integration \n";
-                depth = patch_integration(point, imsource, normalmap, imtarget, depthinit, K, P1, P2, true, depthmapGT);
+                depth = patch_integration(point, imsource, normalmap, imtarget, depthinit, K, P1, P2, debugtab,true, depthmapGT);
+                //cout << "on a fini avec depth : " << depth << std::endl;
                 //cout << "on est sorti de patch_integration \n"; 
                 depthmap.at<float>(i,j) = depth;
                 //cout << "depth : " << depth << std::endl;
+                //création des images normalisée de debug avec debugtab
+                debugzncc.at<float>(i,j) = debugtab[0];
+                debugdistance.at<float>(i,j) = debugtab[1];
             }
         }
-        std::string filename = "depthmap_" + std::to_string(i) + ".tiff";
+        
+        cv::Mat maskZncc = debugzncc != 0;
+        cv::Mat maskedZncc;
+        debugzncc.copyTo(maskedZncc, maskZncc); // Applique le masque à debugzncc
+        double sumZncc = cv::sum(maskedZncc)[0]; // Somme des éléments non nuls
+        int countZncc = cv::countNonZero(maskZncc); // Nombre d'éléments non nuls
+        double meanZncc = countZncc > 0 ? (sumZncc / countZncc) : 0; // Moyenne, en évitant la division par zéro
+
+        // Calcul de la moyenne pour debugdistance, en ignorant les valeurs <= -0.1
+        cv::Mat maskDistance = debugdistance > -0.1;
+        cv::Mat maskedDistance;
+        debugdistance.copyTo(maskedDistance, maskDistance); // Applique le masque à debugdistance
+        double sumDistance = cv::sum(maskedDistance)[0]; // Somme des éléments > -0.1
+        int countDistance = cv::countNonZero(maskDistance); // Nombre d'éléments > -0.1
+        double meanDistance = countDistance > 0 ? (sumDistance / countDistance) : 0; // Moyenne, en évitant la division par zéro
+
+        zncctab[i] = meanZncc;
+        distancetab[i] = meanDistance;
+
+        // Afficher les moyennes
+        std::cout << "Moyenne de debugzncc (sans 0): " << meanZncc << std::endl;
+        std::cout << "Moyenne de debugdistance (sans -0.1): " << meanDistance << std::endl;
+        szncc += meanZncc;
+        sdistance += meanDistance;
+
+        
+        std::string filename;
+
+        //exportation des images normalisée de debugzncc et debugdistance
+        filename = "debugzncc_" + std::to_string(i) + ".tiff";
+        cv::Mat debugznccnorm;
+        cv::normalize(debugzncc, debugznccnorm, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+        bool isSuccess = cv::imwrite(filename, debugznccnorm); // imwrite returns true if the image is saved successfully
+
+
+        //application d'une color map pour debug distance qui évite de cramer les valeurs non nules en IGNORANT les valeures nulles
+        //LE PLUS IMPORTANT EST DIGNORER LES VALEURES NULLES
+
+        cv::Mat nonZeroMask = ~(debugdistance > 0);
+        double minVal, maxVal;
+        cv::minMaxIdx(debugdistance, &minVal, &maxVal, NULL, NULL, nonZeroMask);
+        cv::Mat normalizedImage;
+        debugdistance.copyTo(normalizedImage);
+        normalizedImage.setTo(minVal, ~nonZeroMask);
+
+        filename = "debugdistance_" + std::to_string(i) + ".tiff";
+        cv::Mat debugdistancenorm;
+        cv::normalize(debugdistance, debugdistancenorm, 100, 250, cv::NORM_MINMAX, CV_8UC1);
+        cv::Mat debugdistancenormcolor;
+        cv::applyColorMap(debugdistancenorm, debugdistancenormcolor, cv::COLORMAP_JET);
+        isSuccess = cv::imwrite(filename, debugdistancenormcolor); // imwrite returns true if the image is saved successfully
+
+
+
+        filename = "depthmap_" + std::to_string(i) + ".tiff";
+        
 
         // Save the image in PNG format
-        bool isSuccess = cv::imwrite(filename, depthmap); // imwrite returns true if the image is saved successfully
+        isSuccess = cv::imwrite(filename, depthmap); // imwrite returns true if the image is saved successfully
 
         // Check for successful saving
         if (isSuccess) {
@@ -110,6 +179,11 @@ int main(int argc, char** argv)
         //cv::imshow("depthmap", depthmap);
         //cv::waitKey(0);
     }
+
+    float mzncc = szncc / 8;
+    float mdistance = sdistance / 8;
+    std::cout << "moyenne de zncctab : " << mzncc << std::endl;
+    std::cout << "moyenne de distancetab : " << mdistance << std::endl;
 
     //cout << depthmap << std::endl;
 
