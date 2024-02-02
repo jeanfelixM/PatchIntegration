@@ -75,6 +75,8 @@ __global__ void copatch_to_impatch(float* im, float* patch, int rows,float* impa
     impatch[i] = im[x*m + y];
 }
 
+
+//si j'ai bien tout compris c'est quasi le mieux possible, source : https://github.com/mark-poscablo/gpu-sum-reduction
 __device__ void reduce_sum(float* g_odata, float* g_idata, unsigned int len) {
 	extern __shared__ float sdata[];
 

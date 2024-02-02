@@ -41,7 +41,7 @@ int main(int argc, char** argv)
         cerr << "Une ou plusieurs images n'ont pas été chargées correctement." << endl;
         return EXIT_FAILURE;
     }
-    int base = 0;
+    int base = 1;
     P1 = Pmats[base];
     cout << "P1 : " << P1 << std::endl;
     // Visualisation des images
@@ -60,7 +60,7 @@ int main(int argc, char** argv)
     cout << "Ground truth depth map type : " << depthmapGT.type() << std::endl;
 
     
-
+    cout << depthmapGT << std::endl;
 	cv::Mat depthmap = cv::Mat::zeros(imsource.rows, imsource.cols, CV_32F);
 	float depth;
     float depthinit;
@@ -85,27 +85,21 @@ int main(int argc, char** argv)
         //cout << "With P2 : " << P2 << endl;
         cv::Mat debugzncc = cv::Mat::zeros(imsource.rows, imsource.cols, CV_32F);
         cv::Mat debugdistance = cv::Mat::zeros(imsource.rows, imsource.cols, CV_32F);
-        for (int i = 50; i < imsource.rows;i++){
+        for (int i = 0; i < imsource.rows;i++){
             //cout << "i : " << i << std::endl;
-            for (int j = 50; j < imsource.cols;j++){
+            for (int j = 0; j < imsource.cols;j++){
                 float debugtab[2];
                 
                 cv::Point2f point(i, j);
                 //depthinit à initialiser intelligement (KDtree avec les points du SfM)
-                depthinit = depthmapGT.at<float>(i, j) + 0.07;
-                //cout << "on init avec : " << depthinit << std::endl;
-                //cout << "depthGT = " << depthmapGT.at<float>(i, j) << std::endl;
-                //cout << "depthinit : " << depthinit << std::endl;
-                //cout << "depthinit : " << depthinit << std::endl;
-                //cout << "on va dans patch_integration \n";
+                depthinit = depthmapGT.at<float>(i, j) + 0.1;
                 depth = patch_integration(point, imsource, normalmap, imtarget, depthinit, K, P1, P2, debugtab,true, depthmapGT);
-                //cout << "on a fini avec depth : " << depth << std::endl;
-                //cout << "on est sorti de patch_integration \n"; 
                 depthmap.at<float>(i,j) = depth;
                 //cout << "depth : " << depth << std::endl;
                 //création des images normalisée de debug avec debugtab
                 debugzncc.at<float>(i,j) = debugtab[0];
-                debugdistance.at<float>(i,j) = debugtab[1];
+                debugdistance.at<float>(i,j) = depthmapGT.at<float>(i, j)-depth;
+                //cout << debugdistance.at<float>(i,j) << endl;
             }
         }
         

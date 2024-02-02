@@ -45,4 +45,4 @@ float evaluation_patch(const cv::Mat& patchsource, const cv::Mat& patchtarget, c
  * @param[in] P2 changement de pose entre l'image 2 et le repère monde, P2 = (R2 | t2) 4*3
  * @return Profondeur du point
 */
-float patch_integration(cv::Point2f point, const cv::Mat& imsource, const cv::Mat& normalsource, const cv::Mat& imtarget, float depthinit, const::cv::Mat& K, const cv::Mat& P1,const cv::Mat& P2, bool debug = false, const cv::Mat& depthmap = cv::Mat());
+float patch_integration(cv::Point2f point, const cv::Mat& imsource, const cv::Mat& normalsource, const cv::Mat& imtarget, float depthinit, const::cv::Mat& K, const cv::Mat& P1,const cv::Mat& P2,float debugtab[2], bool debug = false, const cv::Mat& depthmap = cv::Mat());

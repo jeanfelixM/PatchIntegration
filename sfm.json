@@ -1,0 +1,543 @@
+{
+  "version": [
+    "1",
+    "2",
+    "4"
+  ],
+  "featuresFolders": [],
+  "matchesFolders": [],
+  "views": [
+    {
+      "viewId": "1",
+      "poseId": "1",
+      "frameId": "1",
+      "intrinsicId": "1",
+      "path": "/home/bbrument/matlab_workspace/lambertianRendering_v1/data/sphere_lena_100_highres/images/01_light_01.png",
+      "width": "100",
+      "height": "100",
+      "metadata": ""
+    },
+    {
+      "viewId": "2",
+      "poseId": "2",
+      "frameId": "2",
+      "intrinsicId": "1",
+      "path": "/home/bbrument/matlab_workspace/lambertianRendering_v1/data/sphere_lena_100_highres/images/02_light_01.png",
+      "width": "100",
+      "height": "100",
+      "metadata": ""
+    },
+    {
+      "viewId": "3",
+      "poseId": "3",
+      "frameId": "3",
+      "intrinsicId": "1",
+      "path": "/home/bbrument/matlab_workspace/lambertianRendering_v1/data/sphere_lena_100_highres/images/03_light_01.png",
+      "width": "100",
+      "height": "100",
+      "metadata": ""
+    },
+    {
+      "viewId": "4",
+      "poseId": "4",
+      "frameId": "4",
+      "intrinsicId": "1",
+      "path": "/home/bbrument/matlab_workspace/lambertianRendering_v1/data/sphere_lena_100_highres/images/04_light_01.png",
+      "width": "100",
+      "height": "100",
+      "metadata": ""
+    },
+    {
+      "viewId": "5",
+      "poseId": "5",
+      "frameId": "5",
+      "intrinsicId": "1",
+      "path": "/home/bbrument/matlab_workspace/lambertianRendering_v1/data/sphere_lena_100_highres/images/05_light_01.png",
+      "width": "100",
+      "height": "100",
+      "metadata": ""
+    },
+    {
+      "viewId": "6",
+      "poseId": "6",
+      "frameId": "6",
+      "intrinsicId": "1",
+      "path": "/home/bbrument/matlab_workspace/lambertianRendering_v1/data/sphere_lena_100_highres/images/06_light_01.png",
+      "width": "100",
+      "height": "100",
+      "metadata": ""
+    },
+    {
+      "viewId": "7",
+      "poseId": "7",
+      "frameId": "7",
+      "intrinsicId": "1",
+      "path": "/home/bbrument/matlab_workspace/lambertianRendering_v1/data/sphere_lena_100_highres/images/07_light_01.png",
+      "width": "100",
+      "height": "100",
+      "metadata": ""
+    },
+    {
+      "viewId": "8",
+      "poseId": "8",
+      "frameId": "8",
+      "intrinsicId": "1",
+      "path": "/home/bbrument/matlab_workspace/lambertianRendering_v1/data/sphere_lena_100_highres/images/08_light_01.png",
+      "width": "100",
+      "height": "100",
+      "metadata": ""
+    },
+    {
+      "viewId": "9",
+      "poseId": "9",
+      "frameId": "9",
+      "intrinsicId": "1",
+      "path": "/home/bbrument/matlab_workspace/lambertianRendering_v1/data/sphere_lena_100_highres/images/09_light_01.png",
+      "width": "100",
+      "height": "100",
+      "metadata": ""
+    }
+  ],
+  "intrinsics": [
+    {
+      "intrinsicId": "1",
+      "width": "100",
+      "height": "100",
+      "sensorWidth": "36",
+      "sensorHeight": "36",
+      "serialNumber": "0",
+      "type": "pinhole",
+      "initializationMode": "unknown",
+      "initialFocalLength": "0.001",
+      "focalLength": "180.000000000000",
+      "pixelRatio": "1",
+      "pixelRatioLocked": "false",
+      "principalPoint": [
+        "0.000000000000",
+        "0.000000000000"
+      ],
+      "distortionInitializationMode": "none",
+      "distortionParams": "",
+      "undistortionOffset": [
+        "0",
+        "0"
+      ],
+      "undistortionParams": "",
+      "locked": "true"
+    }
+  ],
+  "poses": [
+    {
+      "poseId": "1",
+      "pose": {
+        "transform": {
+          "rotation": [
+            " 0.894427191000",
+            "-0.214149183074",
+            " 0.392606835637",
+            " 0.000000000000",
+            "-0.877895572914",
+            "-0.478852130681",
+            " 0.447213595500",
+            " 0.428298366149",
+            "-0.785213671273"
+          ],
+          "center": [
+            "-1.000000000000",
+            " 1.000000000000",
+            " 5.000000000000"
+          ]
+        },
+        "locked": "0"
+      }
+    },
+    {
+      "poseId": "2",
+      "pose": {
+        "transform": {
+          "rotation": [
+            " 0.998968540210",
+            "-0.021743555180",
+            " 0.039863184497",
+            " 0.000000000000",
+            "-0.877895572914",
+            "-0.478852130681",
+            " 0.045407660919",
+            " 0.478358213963",
+            "-0.876990058931"
+          ],
+          "center": [
+            "0.000000000000",
+            "1.000000000000",
+            "5.000000000000"
+          ]
+        },
+        "locked": "0"
+      }
+    },
+    {
+      "poseId": "3",
+      "pose": {
+        "transform": {
+          "rotation": [
+            " 0.925546956206",
+            " 0.181309144919",
+            "-0.332400099018",
+            " 0.000000000000",
+            "-0.877895572914",
+            "-0.478852130681",
+            "-0.378632845721",
+            " 0.443200132024",
+            "-0.812533575377"
+          ],
+          "center": [
+            "1.000000000000",
+            "1.000000000000",
+            "5.000000000000"
+          ]
+        },
+        "locked": "0"
+      }
+    },
+    {
+      "poseId": "4",
+      "pose": {
+        "transform": {
+          "rotation": [
+            " 0.894427191000",
+            "-0.040488816509",
+            " 0.445376981598",
+            " 0.000000000000",
+            "-0.995893206468",
+            "-0.090535746043",
+            " 0.447213595500",
+            " 0.080977633018",
+            "-0.890753963197"
+          ],
+          "center": [
+            "-1.000000000000",
+            "-0.000000000000",
+            " 5.000000000000"
+          ]
+        },
+        "locked": "0"
+      }
+    },
+    {
+      "poseId": "5",
+      "pose": {
+        "transform": {
+          "rotation": [
+            " 0.998968540210",
+            "-0.004111016457",
+            " 0.045221181030",
+            " 0.000000000000",
+            "-0.995893206468",
+            "-0.090535746043",
+            " 0.045407660919",
+            " 0.090442362061",
+            "-0.994865982670"
+          ],
+          "center": [
+            "0.000000000000",
+            "0.000000000000",
+            "5.000000000000"
+          ]
+        },
+        "locked": "0"
+      }
+    },
+    {
+      "poseId": "6",
+      "pose": {
+        "transform": {
+          "rotation": [
+            " 0.925546956206",
+            " 0.034279807164",
+            "-0.377077878799",
+            " 0.000000000000",
+            "-0.995893206468",
+            "-0.090535746043",
+            "-0.378632845721",
+            " 0.083795084177",
+            "-0.921745925952"
+          ],
+          "center": [
+            "1.000000000000",
+            "0.000000000000",
+            "5.000000000000"
+          ]
+        },
+        "locked": "0"
+      }
+    },
+    {
+      "poseId": "7",
+      "pose": {
+        "transform": {
+          "rotation": [
+            " 0.894427191000",
+            " 0.152832143980",
+            " 0.420288395945",
+            " 0.000000000000",
+            "-0.939793423488",
+            " 0.341743063087",
+            " 0.447213595500",
+            "-0.305664287960",
+            "-0.840576791891"
+          ],
+          "center": [
+            "-1.000000000000",
+            "-1.000000000000",
+            " 5.000000000000"
+          ]
+        },
+        "locked": "0"
+      }
+    },
+    {
+      "poseId": "8",
+      "pose": {
+        "transform": {
+          "rotation": [
+            " 0.998968540210",
+            " 0.015517753130",
+            " 0.042673821107",
+            " 0.000000000000",
+            "-0.939793423488",
+            " 0.341743063087",
+            " 0.045407660919",
+            "-0.341390568859",
+            "-0.938824064361"
+          ],
+          "center": [
+            "-0.000000000000",
+            "-1.000000000000",
+            " 5.000000000000"
+          ]
+        },
+        "locked": "0"
+      }
+    },
+    {
+      "poseId": "9",
+      "pose": {
+        "transform": {
+          "rotation": [
+            " 0.925546956206",
+            "-0.129395148482",
+            "-0.355836658325",
+            " 0.000000000000",
+            "-0.939793423488",
+            " 0.341743063087",
+            "-0.378632845721",
+            "-0.316299251844",
+            "-0.869822942572"
+          ],
+          "center": [
+            " 1.000000000000",
+            "-1.000000000000",
+            " 5.000000000000"
+          ]
+        },
+        "locked": "0"
+      }
+    }
+  ],
+  "structure": [
+    {
+      "landmarkId": "1",
+      "descType": "dspsift",
+      "color": [
+        "255",
+        "255",
+        "255"
+      ],
+      "X": [
+        "0",
+        "0",
+        "1.9"
+      ],
+      "observations": [
+        {
+          "observationId": "1",
+          "featureId": "0",
+          "x": [
+            "1.0",
+            "1.0"
+          ],
+          "scale": "1.0"
+        },
+        {
+          "observationId": "2",
+          "featureId": "0",
+          "x": [
+            "1.0",
+            "1.0"
+          ],
+          "scale": "1.0"
+        },
+        {
+          "observationId": "3",
+          "featureId": "0",
+          "x": [
+            "1.0",
+            "1.0"
+          ],
+          "scale": "1.0"
+        },
+        {
+          "observationId": "4",
+          "featureId": "0",
+          "x": [
+            "1.0",
+            "1.0"
+          ],
+          "scale": "1.0"
+        },
+        {
+          "observationId": "5",
+          "featureId": "0",
+          "x": [
+            "1.0",
+            "1.0"
+          ],
+          "scale": "1.0"
+        },
+        {
+          "observationId": "6",
+          "featureId": "0",
+          "x": [
+            "1.0",
+            "1.0"
+          ],
+          "scale": "1.0"
+        },
+        {
+          "observationId": "7",
+          "featureId": "0",
+          "x": [
+            "1.0",
+            "1.0"
+          ],
+          "scale": "1.0"
+        },
+        {
+          "observationId": "8",
+          "featureId": "0",
+          "x": [
+            "1.0",
+            "1.0"
+          ],
+          "scale": "1.0"
+        },
+        {
+          "observationId": "9",
+          "featureId": "0",
+          "x": [
+            "1.0",
+            "1.0"
+          ],
+          "scale": "1.0"
+        }
+      ]
+    },
+    {
+      "landmarkId": "2",
+      "descType": "dspsift",
+      "color": [
+        "255",
+        "255",
+        "255"
+      ],
+      "X": [
+        "0",
+        "0",
+        "3.5"
+      ],
+      "observations": [
+        {
+          "observationId": "1",
+          "featureId": "0",
+          "x": [
+            "1.0",
+            "1.0"
+          ],
+          "scale": "1.0"
+        },
+        {
+          "observationId": "2",
+          "featureId": "0",
+          "x": [
+            "1.0",
+            "1.0"
+          ],
+          "scale": "1.0"
+        },
+        {
+          "observationId": "3",
+          "featureId": "0",
+          "x": [
+            "1.0",
+            "1.0"
+          ],
+          "scale": "1.0"
+        },
+        {
+          "observationId": "4",
+          "featureId": "0",
+          "x": [
+            "1.0",
+            "1.0"
+          ],
+          "scale": "1.0"
+        },
+        {
+          "observationId": "5",
+          "featureId": "0",
+          "x": [
+            "1.0",
+            "1.0"
+          ],
+          "scale": "1.0"
+        },
+        {
+          "observationId": "6",
+          "featureId": "0",
+          "x": [
+            "1.0",
+            "1.0"
+          ],
+          "scale": "1.0"
+        },
+        {
+          "observationId": "7",
+          "featureId": "0",
+          "x": [
+            "1.0",
+            "1.0"
+          ],
+          "scale": "1.0"
+        },
+        {
+          "observationId": "8",
+          "featureId": "0",
+          "x": [
+            "1.0",
+            "1.0"
+          ],
+          "scale": "1.0"
+        },
+        {
+          "observationId": "9",
+          "featureId": "0",
+          "x": [
+            "1.0",
+            "1.0"
+          ],
+          "scale": "1.0"
+        }
+      ]
+    }
+  ]
+}

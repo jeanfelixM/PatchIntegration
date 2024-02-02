@@ -18,7 +18,7 @@ void debugPatch(const cv::Mat& patchsource, const cv::Mat& patchtarget, const cv
 
 
 
-
+//en gros : surement n'imp
 void source2targetCuda(
     cv::cuda::GpuMat d_K,
     cv::cuda::GpuMat d_P1,
@@ -216,7 +216,8 @@ float evaluation_patch(const cv::Mat& patchsource, const cv::Mat& patchtarget, c
     return zncc;
 }
 
-float zncc_cuda(float* patchsource, float* patchtarget, float* imsource, float* imtarget,constant int rows) {
+//pas eu le temps de faire un truc qui marche, encore moins de tester, idealement toutes les cases mémoires sont réservé en dehors de la fonction et remplie dès que possible avec les valeurs
+float zncc_cuda(float* patchsource, float* patchtarget, float* imsource, float* imtarget,const int rows) {
     float* impatchsource[rows];
     float* impatchtarget[rows];
     float* std1[rows];
